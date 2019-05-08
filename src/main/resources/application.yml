@@ -1,1 +1,8 @@
-
+wechat:
+  mini-program:
+    app-id: ""
+    app-secret: ""
+  pay:
+    mch-id: ""
+    api-key: ""
+    notify-url: ""
