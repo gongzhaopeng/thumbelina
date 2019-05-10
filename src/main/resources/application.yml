@@ -1,8 +1,8 @@
 wechat:
   mini-program:
-    app-id: ""
-    app-secret: ""
+    app-id: "MOCKED_APP_ID"
+    app-secret: "MOCKED_APP_SECRET"
   pay:
-    mch-id: ""
-    api-key: ""
-    notify-url: ""
+    mch-id: "MOCKED_MCH_ID"
+    api-key: "MOCKED_API_KEY"
+    notify-url: "MOCKED_NOTIFY_URL"

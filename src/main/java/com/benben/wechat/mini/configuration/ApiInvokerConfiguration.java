@@ -3,7 +3,7 @@ package com.benben.wechat.mini.configuration;
 import com.benben.wechat.mini.apiinvoker.WechatAuthCode2SessionInvoker;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
 import com.benben.wechat.mini.util.HostInformationExtractor;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.benben.wechat.mini.component.JsonUtility;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -14,12 +14,12 @@ public class ApiInvokerConfiguration {
     @Bean
     public WechatAuthCode2SessionInvoker
     wechatAuthCode2SessionInvoker(RestTemplate restTemplate,
-                                  ObjectMapper objectMapper,
+                                  JsonUtility jsonUtility,
                                   WechatMiniProgramConfiguration wechatMiniConfig) {
 
         return new WechatAuthCode2SessionInvoker(
                 restTemplate,
-                objectMapper,
+                jsonUtility,
                 wechatMiniConfig.getAppId(),
                 wechatMiniConfig.getAppSecret()
         );
@@ -28,13 +28,13 @@ public class ApiInvokerConfiguration {
     @Bean
     public WechatPayUnifiedorderInvoker
     wechatPayUnifiedorderInvoker(RestTemplate restTemplate,
-                                 ObjectMapper objectMapper,
+                                 JsonUtility jsonUtility,
                                  WechatMiniProgramConfiguration wechatMiniConfig,
                                  WechatPayConfiguration wechatPayConfig) {
 
         return new WechatPayUnifiedorderInvoker(
                 restTemplate,
-                objectMapper,
+                jsonUtility,
                 wechatMiniConfig.getAppId(),
                 wechatPayConfig.getMchId(),
                 wechatPayConfig.getApiKey(),

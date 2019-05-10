@@ -1,12 +1,14 @@
 package com.benben.wechat.mini.apiinvoker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.benben.wechat.mini.component.JsonUtility;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Optional;
 
+@Slf4j
 public class WechatAuthCode2SessionInvoker {
 
     final static private String URL =
@@ -19,24 +21,33 @@ public class WechatAuthCode2SessionInvoker {
 
     final private RestTemplate restTemplate;
 
-    final private ObjectMapper objectMapper;
+    final private JsonUtility jsonUtility;
 
     final private String appId;
     final private String appSecret;
 
     public WechatAuthCode2SessionInvoker(RestTemplate restTemplate,
-                                         ObjectMapper objectMapper,
+                                         JsonUtility jsonUtility,
                                          String appId,
                                          String appSecret) {
 
         this.restTemplate = restTemplate;
 
-        this.objectMapper = objectMapper;
+        this.jsonUtility = jsonUtility;
 
         this.appId = appId;
         this.appSecret = appSecret;
+
+        log.info("WechatAuthCode2SessionInvoker configuration => "
+                        + "appId: {}, appSecret: {}",
+                appId, appSecret);
     }
 
+    /**
+     * @param jsCode
+     * @return
+     * @throws InvalidJsCodeException
+     */
     public Return invoke(String jsCode) {
 
         final var uriComponents = UriComponentsBuilder.fromHttpUrl(URL)
@@ -56,23 +67,15 @@ public class WechatAuthCode2SessionInvoker {
             } else if (r.errcode == ERRCODE_INVALID_CODE) {
                 throw new InvalidJsCodeException();
             } else {
-
-                var exceptionMsg = "";
-                try {
-                    exceptionMsg = objectMapper.writeValueAsString(r);
-                } catch (Exception e) {
-                    // Damned nonsense, but it is java again.
-                    throw new RuntimeException(e);
-                }
-
-                throw new FatalExternalApiInvokeException(exceptionMsg);
+                throw new FatalExternalApiInvokeException(
+                        jsonUtility.toJsonString(r));
             }
         }).orElseThrow(() -> new FatalExternalApiInvokeException(
                 "The response of wechat-api[auth.code2Session] is null."));
     }
 
     @Data
-    private static class Return {
+    public static class Return {
 
         private String openid;
         private String sessionKey;
