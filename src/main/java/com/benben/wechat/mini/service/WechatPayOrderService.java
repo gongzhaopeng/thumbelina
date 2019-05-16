@@ -1,5 +1,6 @@
 package com.benben.wechat.mini.service;
 
+import com.benben.wechat.mini.apiinvoker.FatalExternalApiInvokeException;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
 import com.benben.wechat.mini.configuration.WechatMiniProgramConfiguration;
 import com.benben.wechat.mini.configuration.WechatPayConfiguration;
@@ -30,6 +31,13 @@ public class WechatPayOrderService {
         this.wechatPayConfig = wechatPayConfig;
     }
 
+    /**
+     * @param openid
+     * @param orderBusinessFields
+     * @return
+     * @throws WechatPayUnifiedorderInvoker.NoEnoughBalanceException
+     * @throws FatalExternalApiInvokeException
+     */
     public JsapiParams orderForJsapi(
             String openid,
             Map<String, Object> orderBusinessFields) {

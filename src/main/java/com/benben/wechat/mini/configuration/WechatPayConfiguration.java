@@ -14,4 +14,10 @@ public class WechatPayConfiguration {
     private String apiKey;
 
     private String notifyUrl;
+
+    private String refundNotifyUrl;
+
+    private Integer refundRetryTimes;
+
+    private Integer refundRetryDelay;
 }

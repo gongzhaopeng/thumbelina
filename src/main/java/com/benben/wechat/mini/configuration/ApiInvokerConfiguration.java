@@ -1,6 +1,7 @@
 package com.benben.wechat.mini.configuration;
 
 import com.benben.wechat.mini.apiinvoker.WechatAuthCode2SessionInvoker;
+import com.benben.wechat.mini.apiinvoker.WechatPayRefundInvoker;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
 import com.benben.wechat.mini.util.HostInformationExtractor;
 import com.benben.wechat.mini.component.JsonUtility;
@@ -40,5 +41,21 @@ public class ApiInvokerConfiguration {
                 wechatPayConfig.getApiKey(),
                 wechatPayConfig.getNotifyUrl(),
                 HostInformationExtractor.getHostIp());
+    }
+
+    @Bean
+    public WechatPayRefundInvoker
+    wechatPayRefundInvoker(RestTemplate restTemplate,
+                           JsonUtility jsonUtility,
+                           WechatMiniProgramConfiguration wechatMiniConfig,
+                           WechatPayConfiguration wechatPayConfig) {
+
+        return new WechatPayRefundInvoker(
+                restTemplate,
+                jsonUtility,
+                wechatMiniConfig.getAppId(),
+                wechatPayConfig.getMchId(),
+                wechatPayConfig.getApiKey(),
+                wechatPayConfig.getRefundNotifyUrl());
     }
 }

@@ -6,3 +6,7 @@ wechat:
     mch-id: "MOCKED_MCH_ID"
     api-key: "MOCKED_API_KEY"
     notify-url: "MOCKED_NOTIFY_URL"
+    refund-notify-url: "MOCKED_REFUND_NOTIFY_URL"
+    refund-retry-times: 2
+    # Unit => Millisecond
+    refund-retry-delay: 50

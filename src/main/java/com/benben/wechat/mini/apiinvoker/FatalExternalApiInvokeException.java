@@ -1,14 +1,14 @@
 package com.benben.wechat.mini.apiinvoker;
 
-class FatalExternalApiInvokeException
+public class FatalExternalApiInvokeException
         extends RuntimeException {
 
-    FatalExternalApiInvokeException(String message) {
+    public FatalExternalApiInvokeException(String message) {
 
         super(message);
     }
 
-    FatalExternalApiInvokeException(String message, Throwable cause) {
+    public FatalExternalApiInvokeException(String message, Throwable cause) {
 
         super(message, cause);
     }

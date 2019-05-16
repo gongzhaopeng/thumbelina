@@ -47,6 +47,7 @@ public class WechatAuthCode2SessionInvoker {
      * @param jsCode
      * @return
      * @throws InvalidJsCodeException
+     * @throws FatalExternalApiInvokeException
      */
     public Return invoke(String jsCode) {
 
