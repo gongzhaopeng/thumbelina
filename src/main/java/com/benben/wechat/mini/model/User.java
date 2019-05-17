@@ -1,0 +1,75 @@
+package com.benben.wechat.mini.model;
+
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
+
+@Document
+@Data
+public class User {
+
+    @Id
+    private String id;
+    private WechatInfo wechat;
+    private CustomProfile customProfile;
+    private List<AssessCode> assessCodes;
+    private List<Assessment> assessments;
+
+    @Data
+    public static class WechatInfo {
+
+        private WechatLoginInfo login;
+        private String nickName;
+        private String avatarUrl;
+        private String gender;
+        private String city;
+        private String province;
+        private String country;
+        private String language;
+    }
+
+    @Data
+    public static class WechatLoginInfo {
+
+        private String openid;
+        private String sessionKey;
+        private String unionid;
+    }
+
+    @Data
+    public static class CustomProfile {
+
+        private String gender;
+        /**
+         * 文,理...分科
+         */
+        private String subject;
+        /**
+         * 语文,数学,英语,化学...
+         */
+        private String favorCourses;
+        /**
+         * 偏爱的专业
+         */
+        private String favorSpecs;
+        private List<String> location;
+        private String school;
+    }
+
+    @Data
+    public static class AssessCode {
+
+        private String code;
+        private String state;
+    }
+
+    @Data
+    public static class Assessment {
+
+        private String id;
+        private String subject;
+        private List<String> completedModules;
+    }
+}
