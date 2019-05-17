@@ -12,6 +12,7 @@ public class Assessment {
 
     @Id
     private String id;
+    private Long createTime;
     private String subject;
     private String owner;
     private String assessCode;

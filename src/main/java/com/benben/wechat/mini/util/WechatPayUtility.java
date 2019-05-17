@@ -3,6 +3,8 @@ package com.benben.wechat.mini.util;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.DigestUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -10,6 +12,8 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -19,10 +23,9 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.security.Security;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class WechatPayUtility {
@@ -32,6 +35,15 @@ public class WechatPayUtility {
 
     final static private TransformerFactory transformerFactory
             = TransformerFactory.newInstance();
+
+    final static private String FIELD_SIGN = "sign";
+
+    static {
+        if (Arrays.stream(Security.getProviders())
+                .noneMatch(p -> p instanceof BouncyCastleProvider)) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     static public String sign(
             Map<String, Object> fieldsToSign,
@@ -57,6 +69,48 @@ public class WechatPayUtility {
         }
 
         return signature;
+    }
+
+    static public boolean checkSign(
+            Map<String, Object> dataToSign,
+            String apiKey,
+            SignType signType) {
+
+        final var providedSign = dataToSign.get(FIELD_SIGN);
+        if (providedSign == null) {
+            return false;
+        }
+
+        final var fieldsToSign = new HashMap<>(dataToSign);
+        fieldsToSign.remove(FIELD_SIGN);
+        final var actualSign = sign(fieldsToSign, apiKey, signType);
+
+        return actualSign.equals(providedSign);
+    }
+
+    static public Map<String, String> decryptRefundNotify(
+            String cipherText, String apiKey) {
+
+        try {
+            final var decodedCipherText =
+                    Base64Utils.decodeFromString(cipherText);
+            final var decryptKey =
+                    DigestUtils.md5Digest(apiKey.getBytes());
+
+            final var cipher =
+                    Cipher.getInstance("AES/ECB/PKCS7Padding",
+                            "BC");
+            final var keySpec = new SecretKeySpec(decryptKey, "AES");
+            cipher.init(Cipher.DECRYPT_MODE, keySpec);
+            final var plainText =
+                    new String(cipher.doFinal(decodedCipherText),
+                            StandardCharsets.UTF_8);
+
+            return parseXmlText(plainText);
+        } catch (Exception e) {
+            throw new RefundNotifyDecryptException(
+                    String.format("Cipher text: %s", cipherText), e);
+        }
     }
 
     static public String generateNonceStr() {
@@ -180,5 +234,15 @@ public class WechatPayUtility {
         private String pack;
         private String signType;
         private String paySign;
+    }
+
+    static public class RefundNotifyDecryptException
+            extends RuntimeException {
+
+        public RefundNotifyDecryptException(
+                String message, Throwable reason) {
+
+            super(message, reason);
+        }
     }
 }

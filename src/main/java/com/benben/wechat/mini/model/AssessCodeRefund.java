@@ -10,11 +10,13 @@ public class AssessCodeRefund {
 
     @Id
     private String id;
+    private Long createTime;
     private String orderId;
     private String orderItemId;
     private Integer fee;
     private State state;
-    private String payNotify;
+    private String wepayNotify;
+    private Long wepayNotifyTs;
 
     public enum State {
 

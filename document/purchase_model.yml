@@ -13,11 +13,13 @@ qustions:
 
 user:
   id: '{wechat-openid}'
+  create-time: '(Long)'
   wechat:
     login:
       openid: 'wechat-openid(String)'
       session-key: 'session-key(String)'
       unionid: 'wechat-unionid(String)'
+      login-time: '(Long)'
     nickName: '用户昵称(String)'
     avatarUrl: '用户的avatar(String)'
     gender: '用户的性别(String)'
@@ -46,6 +48,7 @@ user:
 
 assess-code:
   code: '(String)'  # TODO Unique & Unpredictable
+  create-time: '(Long)'
   # FRESH,OCCUPIED,REFUNDING,REFUNDED
   state: '(String)'
   owner: 'user-id(String)'
@@ -57,6 +60,7 @@ assess-code:
 
 assessment:
   id: '(String)'
+  create-time: '(Long)'
   subject: '(String)'
   owner: '(String)'
   assess-code: '(String)'
@@ -68,6 +72,7 @@ assessment:
 
 assess-code-order:
   id: '(String)'
+  create-time: '(Long)'
   owner: 'user-id(String)'
   items:
     - id: '(String)'
@@ -77,13 +82,16 @@ assess-code-order:
   # UNPAID,PAID
   fee: '(Int)'
   state: '(String)'
-  pay-notify: "(Json-String)"
+  wepay-notify: "(Json-String)"
+  wepay-notify-ts: '(Long)'
 
 assess-code-refund:
   id: '(String)'
+  create-time: '(Long)'
   order-id: '(String)'
   order-item-id: '(String)'
   # REFUNDING,REFUND_FAIL,REFUND_SUCCESS
   fee: '(Int)'
   state: '(String)'
-  pay-notify: "(Json-String)"
+  wepay-notify: "(Json-String)"
+  wepay-notify-ts: '(Long)'

@@ -170,6 +170,13 @@ public class WechatPayUnifiedorderInvoker {
                             + jsonUtility.toJsonString(respBody));
         }
 
+        if (!WechatPayUtility.checkSign(new HashMap<>(respBody), apiKey, WechatPayUtility.SignType.MD5)) {
+            throw new FatalExternalApiInvokeException(
+                    "The sign in the response of wechat-api[pay.unifiedorder] is invalid.\nrequest-fields:\n"
+                            + jsonUtility.toJsonString(reqFields) + "\nresponse-body:\n"
+                            + jsonUtility.toJsonString(respBody));
+        }
+
         if (!respBody.getOrDefault(RESP_FIELD_RESULT_CODE, RESULT_CODE_FAIL).equals(RESULT_CODE_SUCCESS)) {
 
             final var errCode = respBody.getOrDefault(RESP_FIELD_ERROR_CODE, "UNDEFINED");

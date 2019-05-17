@@ -10,6 +10,7 @@ public class AssessCode {
 
     @Id
     private String code;
+    private Long createTime;
     private State state;
     private String owner;
     private String occupiedBy;
@@ -17,8 +18,6 @@ public class AssessCode {
     private String orderId;
     private String orderItemId;
     private String refundId;
-
-    // TODO
 
     public enum State {
         FRESH,

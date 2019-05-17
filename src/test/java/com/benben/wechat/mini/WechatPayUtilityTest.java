@@ -11,7 +11,7 @@ import java.util.Map;
 public class WechatPayUtilityTest {
 
     @Test
-    public void basicParseXmlText() {
+    public void parseXmlText() {
 
         final var mockedResponse =
                 "<xml>\n" +
@@ -48,7 +48,7 @@ public class WechatPayUtilityTest {
     }
 
     @Test
-    public void basicToXmlText() {
+    public void toXmlText() {
 
         final Map<String, Object> request = Map.of(
                 "return_code", "SUCCESS",
@@ -57,5 +57,32 @@ public class WechatPayUtilityTest {
         final var xmlText = WechatPayUtility.toXmlText(request);
 
         log.info("xmlTest:\n{}", xmlText);
+    }
+
+    @Test
+    public void sign() {
+
+        final Map<String, Object> fieldsToSign = Map.of(
+                "appid", "wxd930ea5d5a258f4f",
+                "mch_id", "10000100",
+                "device_info", "1000",
+                "body", "test",
+                "nonce_str", "ibuaiVcKdpRxkhJA");
+
+        final var apiKey = "192006250b4c09247ec02edce69f6a2d";
+
+        final var expectedSign =
+                "9A0A8659F005D6984697E2CA0A9CF3B7";
+
+        final var actualSign = WechatPayUtility.sign(
+                fieldsToSign, apiKey, WechatPayUtility.SignType.MD5);
+
+        Assert.assertEquals(expectedSign, actualSign);
+    }
+
+    @Test
+    public void decryptRefundNotify() {
+
+        // TODO
     }
 }

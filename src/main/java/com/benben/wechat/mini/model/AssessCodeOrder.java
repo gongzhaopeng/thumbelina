@@ -12,12 +12,13 @@ public class AssessCodeOrder {
 
     @Id
     private String id;
+    private Long createTime;
     private String owner;
     private List<Item> items;
     private Integer fee;
     private State state;
-    private String payNotify;
-    // TODO
+    private String wepayNotify;
+    private Long wepayNotifyTs;
 
     @Data
     public static class Item {

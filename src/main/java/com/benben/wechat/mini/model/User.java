@@ -12,6 +12,7 @@ public class User {
 
     @Id
     private String id;
+    private Long createTime;
     private WechatInfo wechat;
     private CustomProfile customProfile;
     private List<AssessCode> assessCodes;
@@ -36,6 +37,7 @@ public class User {
         private String openid;
         private String sessionKey;
         private String unionid;
+        private Long loginTime;
     }
 
     @Data
