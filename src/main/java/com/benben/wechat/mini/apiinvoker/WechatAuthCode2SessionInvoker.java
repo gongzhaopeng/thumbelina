@@ -59,7 +59,8 @@ public class WechatAuthCode2SessionInvoker {
                 .build();
 
         final var ret = Optional.ofNullable(
-                restTemplate.getForObject(uriComponents.toUri(), Return.class));
+                restTemplate.getForObject(uriComponents.toUri(), String.class))
+                .map(retText -> jsonUtility.parseJsonText(retText, Return.class));
 
         return ret.map(r -> {
 

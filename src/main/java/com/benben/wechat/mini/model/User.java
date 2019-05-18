@@ -6,12 +6,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document
+@Document("User")
 @Data
 public class User {
 
     @Id
-    private String id;
+    private String openid;
     private Long createTime;
     private WechatInfo wechat;
     private CustomProfile customProfile;
@@ -34,7 +34,6 @@ public class User {
     @Data
     public static class WechatLoginInfo {
 
-        private String openid;
         private String sessionKey;
         private String unionid;
         private Long loginTime;
@@ -51,11 +50,11 @@ public class User {
         /**
          * 语文,数学,英语,化学...
          */
-        private String favorCourses;
+        private List<String> favorCourses;
         /**
          * 偏爱的专业
          */
-        private String favorSpecs;
+        private List<String> favorSpecs;
         private List<String> location;
         private String school;
     }
@@ -64,6 +63,7 @@ public class User {
     public static class AssessCode {
 
         private String code;
+        private Long createTime;
         private String state;
     }
 
@@ -71,6 +71,7 @@ public class User {
     public static class Assessment {
 
         private String id;
+        private Long createTime;
         private String subject;
         private List<String> completedModules;
     }

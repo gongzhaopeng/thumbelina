@@ -23,4 +23,13 @@ public class JsonUtility {
             throw new RuntimeException(e);
         }
     }
+
+    public <T> T parseJsonText(String jsonText, Class<T> clazz) {
+
+        try {
+            return objectMapper.readValue(jsonText, clazz);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

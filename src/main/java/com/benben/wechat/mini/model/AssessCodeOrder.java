@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document
+@Document("AssessCodeOrder")
 @Data
 public class AssessCodeOrder {
 

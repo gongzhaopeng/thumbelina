@@ -12,11 +12,10 @@ qustions:
   d: '测评码是否分文科理科'
 
 user:
-  id: '{wechat-openid}'
+  openid: '{wechat-openid}(String)'
   create-time: '(Long)'
   wechat:
     login:
-      openid: 'wechat-openid(String)'
       session-key: 'session-key(String)'
       unionid: 'wechat-unionid(String)'
       login-time: '(Long)'
@@ -39,9 +38,11 @@ user:
     school: '用户就读的学校(String)'
   assess-codes:
     - code: '(String)'
+      create-time: '(Long)'
       state: '(String)'
   assessments:
     - id: 'assessment-id(String)'
+      create-time: '(Long)'
       subject: '(String)'
       completed-modules:
         - 'module-id(String)'
@@ -79,8 +80,8 @@ assess-code-order:
       refund-id: '(String)'
       # REFUNDING,REFUND_FAIL,REFUND_SUCCESS
       refund-state: '(String)'
-  # UNPAID,PAID
   fee: '(Int)'
+  # UNPAID,PAID
   state: '(String)'
   wepay-notify: "(Json-String)"
   wepay-notify-ts: '(Long)'

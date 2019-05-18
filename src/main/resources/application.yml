@@ -1,3 +1,11 @@
+server:
+  port: 9000
+
+spring:
+  data:
+    mongodb:
+      database: 'sich_intent'
+
 wechat:
   mini-program:
     app-id: "MOCKED_APP_ID"
