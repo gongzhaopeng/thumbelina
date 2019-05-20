@@ -2,15 +2,14 @@ package com.benben.wechat.mini.controller;
 
 import com.benben.wechat.mini.apiinvoker.WechatAuthCode2SessionInvoker;
 import com.benben.wechat.mini.model.User;
+import com.benben.wechat.mini.repository.UserRepository;
+import com.benben.wechat.mini.service.UserUpdateLockService;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -22,28 +21,79 @@ import java.util.List;
 public class LoginController {
 
     final private WechatAuthCode2SessionInvoker authCode2SessionInvoker;
+    final private UserUpdateLockService userUpdateLockService;
+    final private UserRepository userRepository;
 
     @Autowired
     public LoginController(
-            WechatAuthCode2SessionInvoker authCode2SessionInvoker) {
+            WechatAuthCode2SessionInvoker authCode2SessionInvoker,
+            UserUpdateLockService userUpdateLockService,
+            UserRepository userRepository) {
 
         this.authCode2SessionInvoker = authCode2SessionInvoker;
+        this.userUpdateLockService = userUpdateLockService;
+        this.userRepository = userRepository;
     }
 
-    /**
-     * TODO Remember to modify the return-type.
-     *
-     * @return
-     */
     @PostMapping("/wechat/jscode")
     public WechatJscodeLoginResp loginByWechatJscode(
             @Valid @RequestBody WechatJscodeLoginReq loginReq) {
 
-        final var ret = authCode2SessionInvoker.invoke(loginReq.jscode);
+        final var wechatInvokeRet =
+                authCode2SessionInvoker.invoke(loginReq.jscode);
+        final var openid = wechatInvokeRet.getOpenid();
 
-        // TODO Remember to add business logic.
+        final var loginedUser = userUpdateLockService.doWithLock(openid, () -> {
 
-        return null;
+            var user = userRepository.findById(openid)
+                    .map(u -> {
+                        updateWechatInfoOfUser(u, loginReq, wechatInvokeRet);
+                        return u;
+                    })
+                    .orElse(constructNewUser(loginReq, wechatInvokeRet));
+
+            return userRepository.save(user);
+        });
+
+
+        return WechatJscodeLoginResp.of(loginedUser);
+    }
+
+    private User constructNewUser(
+            WechatJscodeLoginReq loginReq,
+            WechatAuthCode2SessionInvoker.Return wechatInvokeRet) {
+
+        final var newUser = new User();
+        newUser.setOpenid(wechatInvokeRet.getOpenid());
+        newUser.setCreateTime(System.currentTimeMillis());
+
+        updateWechatInfoOfUser(newUser, loginReq, wechatInvokeRet);
+
+        return newUser;
+    }
+
+    private void updateWechatInfoOfUser(
+            User user,
+            WechatJscodeLoginReq loginReq,
+            WechatAuthCode2SessionInvoker.Return wechatInvokeRet) {
+
+        final var wechat = new User.WechatInfo();
+        wechat.setNickName(loginReq.userInfo.getNickName());
+        wechat.setAvatarUrl(loginReq.userInfo.getAvatarUrl());
+        wechat.setGender(loginReq.userInfo.getGender());
+        wechat.setCity(loginReq.userInfo.getCity());
+        wechat.setProvince(loginReq.userInfo.getProvince());
+        wechat.setCountry(loginReq.userInfo.getCountry());
+        wechat.setLanguage(loginReq.userInfo.getLanguage());
+
+        final var wechatLogin = new User.WechatLoginInfo();
+        wechatLogin.setSessionKey(wechatInvokeRet.getSessionKey());
+        wechatLogin.setUnionid(wechatInvokeRet.getUnionid());
+        wechatLogin.setLoginTime(System.currentTimeMillis());
+
+        wechat.setLogin(wechatLogin);
+
+        user.setWechat(wechat);
     }
 
     @Data
@@ -74,6 +124,18 @@ public class LoginController {
     @Getter
     @Setter
     static class WechatJscodeLoginResp extends CommonResponse {
+
+        static WechatJscodeLoginResp of(User user) {
+
+            final var resp = new WechatJscodeLoginResp();
+            resp.setOpenid(user.getOpenid());
+            resp.setSessionKey(user.getWechat().getLogin().getSessionKey());
+            resp.setCustomProfile(user.getCustomProfile());
+            resp.setAssessCodes(user.getAssessCodes());
+            resp.setAssessments(user.getAssessments());
+
+            return resp;
+        }
 
         private String openid;
         private String sessionKey;

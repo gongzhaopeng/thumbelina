@@ -9,6 +9,6 @@ class CommonResponse {
 
     final static public Integer STATUS_CODE_SUCCESS = 0;
 
-    private Integer statusCode;
+    private Integer statusCode = STATUS_CODE_SUCCESS;
     private String statusDetail;
 }
