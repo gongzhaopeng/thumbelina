@@ -30,13 +30,13 @@ public class AssessCodeCollLockService {
      * @param task
      * @param <T>
      * @return
-     * @throws FailToAcquireLock
+     * @throws FailToAcquireAssessCodeCollLock
      */
     public <T> T doWithLock(int lockRetryTimes, Callable<T> task) {
 
         if (!acquireLock(lockRetryTimes)) {
 
-            throw new FailToAcquireLock();
+            throw new FailToAcquireAssessCodeCollLock();
         }
 
         try {
@@ -52,7 +52,7 @@ public class AssessCodeCollLockService {
      * @param task
      * @param <T>
      * @return
-     * @throws FailToAcquireLock
+     * @throws FailToAcquireAssessCodeCollLock
      */
     public <T> T doWithLock(Callable<T> task) {
 
@@ -72,7 +72,7 @@ public class AssessCodeCollLockService {
         redisTemplate.delete(LOCK_KEY);
     }
 
-    static public class FailToAcquireLock
+    static public class FailToAcquireAssessCodeCollLock
             extends RuntimeException {
     }
 }

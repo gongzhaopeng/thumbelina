@@ -7,8 +7,14 @@ import lombok.Setter;
 @Setter
 class CommonResponse {
 
-    final static public Integer STATUS_CODE_SUCCESS = 0;
+    final static public Integer SC_SUCCESS = 0;
 
-    private Integer statusCode = STATUS_CODE_SUCCESS;
+    final static public Integer SC_SERVICE_BUSY = 10000000;
+
+    final static public Integer SC_WEPAY_NO_ENOUGH_BALANCE = 10000100;
+
+    final static public Integer SC_INVALID_ASSESS_CODE_PURCHASE_AMOUNT = 10000200;
+
+    private Integer statusCode = SC_SUCCESS;
     private String statusDetail;
 }

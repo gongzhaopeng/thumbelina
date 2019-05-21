@@ -35,7 +35,7 @@ public class UserUpdateLockService {
      * @param task
      * @param <T>
      * @return
-     * @throws FailToAcquireLock
+     * @throws FailToAcquireUserUpdateLock
      */
     public <T> T doWithLock(
             String openid, int lockRetryTimes, Callable<T> task) {
@@ -44,7 +44,7 @@ public class UserUpdateLockService {
 
         if (!acquireLock(lockKey, lockRetryTimes)) {
 
-            throw new FailToAcquireLock();
+            throw new FailToAcquireUserUpdateLock();
         }
 
         try {
@@ -61,7 +61,7 @@ public class UserUpdateLockService {
      * @param task
      * @param <T>
      * @return
-     * @throws FailToAcquireLock
+     * @throws FailToAcquireUserUpdateLock
      */
     public <T> T doWithLock(
             String openid, Callable<T> task) {
@@ -82,7 +82,7 @@ public class UserUpdateLockService {
         redisTemplate.delete(lockKey);
     }
 
-    static public class FailToAcquireLock
+    static public class FailToAcquireUserUpdateLock
             extends RuntimeException {
     }
 }

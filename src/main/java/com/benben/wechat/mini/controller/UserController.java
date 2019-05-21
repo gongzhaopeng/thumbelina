@@ -49,7 +49,7 @@ public class UserController {
 
         userUpdateLockService.doWithLock(openid, () -> {
 
-            var user = userRepository.findById(openid)
+            final var user = userRepository.findById(openid)
                     .map(u -> {
                         u.setCustomProfile(customProfile);
                         return u;
