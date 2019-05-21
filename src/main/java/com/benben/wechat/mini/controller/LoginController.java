@@ -1,5 +1,6 @@
 package com.benben.wechat.mini.controller;
 
+import com.benben.wechat.mini.apiinvoker.FatalExternalApiInvokeException;
 import com.benben.wechat.mini.apiinvoker.WechatAuthCode2SessionInvoker;
 import com.benben.wechat.mini.model.User;
 import com.benben.wechat.mini.repository.UserRepository;
@@ -35,6 +36,13 @@ public class LoginController {
         this.userRepository = userRepository;
     }
 
+    /**
+     * @param loginReq
+     * @return
+     * @throws WechatAuthCode2SessionInvoker.InvalidJsCodeException
+     * @throws FatalExternalApiInvokeException
+     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
+     */
     @PostMapping("/wechat/jscode")
     public WechatJscodeLoginResp loginByWechatJscode(
             @Valid @RequestBody WechatJscodeLoginReq loginReq) {

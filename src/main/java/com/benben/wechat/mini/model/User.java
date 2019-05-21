@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
+import java.util.*;
 
 @Document("User")
 @Data
@@ -17,6 +17,33 @@ public class User {
     private CustomProfile customProfile;
     private List<AssessCode> assessCodes;
     private List<Assessment> assessments;
+
+    public Optional<AssessCode> getAssessCode(String code) {
+
+        return Optional.ofNullable(assessCodes).flatMap(acs ->
+                acs.stream()
+                        .filter(ac -> code.equals(ac.getCode()))
+                        .findFirst()
+        );
+    }
+
+    public Optional<Assessment> getAssessment(String assessmentId) {
+
+        return Optional.ofNullable(assessments).flatMap(as ->
+                as.stream()
+                        .filter(a -> assessmentId.equals(a.getId()))
+                        .findFirst()
+        );
+    }
+
+    public void addAssessment(Assessment assessment) {
+
+        if (assessments == null) {
+            assessments = new ArrayList<>();
+        }
+
+        assessments.add(assessment);
+    }
 
     @Data
     public static class WechatInfo {
@@ -64,7 +91,7 @@ public class User {
 
         private String code;
         private Long createTime;
-        private String state;
+        private com.benben.wechat.mini.model.AssessCode.State state;
     }
 
     @Data
@@ -73,6 +100,15 @@ public class User {
         private String id;
         private Long createTime;
         private String subject;
-        private List<String> completedModules;
+        private Set<String> completedModules;
+
+        public void addCompletedModule(String moduleId) {
+
+            if (completedModules == null) {
+                completedModules = new HashSet<>();
+            }
+
+            completedModules.add(moduleId);
+        }
     }
 }

@@ -28,6 +28,11 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
+    /**
+     * @param openid
+     * @return
+     * @throws UserNotFoundException
+     */
     @GetMapping("/{openid}")
     public UserInfoResp getUserInfoByOpenid(
             @PathVariable("openid") String openid) {
@@ -38,6 +43,13 @@ public class UserController {
         return UserInfoResp.of(user);
     }
 
+    /**
+     * @param openid
+     * @param customProfile
+     * @return
+     * @throws UserNotFoundException
+     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
+     */
     @PutMapping("/{openid}/profile/custom")
     public CustomProfileUpdateResp updateCustomProfile(
             @PathVariable("openid") String openid,

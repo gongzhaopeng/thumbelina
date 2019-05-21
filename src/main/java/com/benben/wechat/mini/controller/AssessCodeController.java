@@ -1,5 +1,6 @@
 package com.benben.wechat.mini.controller;
 
+import com.benben.wechat.mini.apiinvoker.FatalExternalApiInvokeException;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
 import com.benben.wechat.mini.controller.exception.UserNotFoundException;
 import com.benben.wechat.mini.repository.UserRepository;
@@ -40,6 +41,15 @@ public class AssessCodeController {
         this.wechatPayOrderService = wechatPayOrderService;
     }
 
+    /**
+     * @param purchaseReq
+     * @return
+     * @throws UserNotFoundException
+     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
+     * @throws AssessCodeService.InvalidAssessCodePurchaseAmount
+     * @throws WechatPayUnifiedorderInvoker.NoEnoughBalanceException
+     * @throws FatalExternalApiInvokeException
+     */
     @PostMapping("/purchase")
     public PurchaseResp purchase(
             @Valid @RequestBody PurchaseReq purchaseReq) {

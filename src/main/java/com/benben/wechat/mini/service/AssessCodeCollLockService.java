@@ -6,13 +6,15 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.stream.IntStream;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AssessCodeCollLockService {
 
     static final private Duration LOCK_TIMEOUT =
             Duration.ofSeconds(30);
+    static final private Duration LOCK_RETRY_DELAY =
+            Duration.ofMillis(50);
 
     static final private String LOCK_KEY =
             "intent:lock:assesscode:coll";
@@ -61,10 +63,25 @@ public class AssessCodeCollLockService {
 
     private boolean acquireLock(int lockRetryTimes) {
 
-        return IntStream.range(0, lockRetryTimes + 1).filter(i ->
-                Optional.ofNullable(redisTemplate.opsForValue().setIfAbsent(LOCK_KEY,
-                        String.valueOf(System.currentTimeMillis()), LOCK_TIMEOUT))
-                        .orElseThrow()).findFirst().isPresent();
+        for (int i = 0; i < lockRetryTimes + 1; i++) {
+
+            final var success = Optional.ofNullable(
+                    redisTemplate.opsForValue().setIfAbsent(LOCK_KEY,
+                            String.valueOf(System.currentTimeMillis()), LOCK_TIMEOUT))
+                    .orElse(false);
+
+            if (success) {
+                return true;
+            }
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(LOCK_RETRY_DELAY.toMillis());
+            } catch (Exception e) {
+                // This kind of Java again.
+            }
+        }
+
+        return false;
     }
 
     private void releaseLock() {

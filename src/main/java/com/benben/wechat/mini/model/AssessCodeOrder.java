@@ -19,6 +19,7 @@ public class AssessCodeOrder {
     private State state;
     private String wepayNotify;
     private Long wepayNotifyTs;
+    private String wepayTid;
 
     @Data
     public static class Item {
