@@ -1,9 +1,12 @@
 package com.benben.wechat.mini.service;
 
+import com.benben.wechat.mini.apiinvoker.WechatPayRefundInvoker;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
 import com.benben.wechat.mini.model.AssessCode;
 import com.benben.wechat.mini.model.AssessCodeOrder;
+import com.benben.wechat.mini.model.AssessCodeRefund;
 import com.benben.wechat.mini.repository.AssessCodeOrderRepository;
+import com.benben.wechat.mini.repository.AssessCodeRefundRepository;
 import com.benben.wechat.mini.repository.AssessCodeRepository;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -20,12 +23,8 @@ import java.util.stream.IntStream;
 @Service
 public class AssessCodeService {
 
-    final static private Map<Integer, Integer> AMOUNT_TO_FEE =
-            Map.of(
-                    1, 1,
-                    2, 2,
-                    3, 3
-            );
+    final static private List<Integer> AMOUNT_TO_FEE =
+            List.of(0, 1, 2, 3);
 
     final static private String ASSESS_CODE_WECHAT_ORDER_BODY =
             "本本教育:志愿填报系统:测评码";
@@ -35,14 +34,17 @@ public class AssessCodeService {
 
     final private AssessCodeOrderRepository assessCodeOrderRepository;
     final private AssessCodeRepository assessCodeRepository;
+    final private AssessCodeRefundRepository assessCodeRefundRepository;
 
     @Autowired
     public AssessCodeService(
             AssessCodeOrderRepository assessCodeOrderRepository,
-            AssessCodeRepository assessCodeRepository) {
+            AssessCodeRepository assessCodeRepository,
+            AssessCodeRefundRepository assessCodeRefundRepository) {
 
         this.assessCodeOrderRepository = assessCodeOrderRepository;
         this.assessCodeRepository = assessCodeRepository;
+        this.assessCodeRefundRepository = assessCodeRefundRepository;
     }
 
     /**
@@ -67,6 +69,38 @@ public class AssessCodeService {
                     WechatPayUnifiedorderInvoker.REQ_M_FIELD_TOTAL_FEE, fee
             );
         }).orElseThrow(InvalidAssessCodePurchaseAmount::new);
+    }
+
+    /**
+     * @param refundItem
+     * @param order
+     * @return
+     * @throws NonRefundableException
+     * @throws ConcurrentRefundDeny
+     */
+    public Map<String, Object> constructWechatRefundBusinessFields(
+            AssessCodeOrder.Item refundItem, AssessCodeOrder order) {
+
+        if (refundItem.getRefundId() != null &&
+                refundItem.getRefundState() != AssessCodeRefund.State.REFUND_FAIL) {
+            throw new NonRefundableException();
+        }
+
+        if (order.getItems().stream().anyMatch(
+                item -> AssessCodeRefund.State.REFUNDING == item.getRefundState())) {
+            throw new ConcurrentRefundDeny();
+        }
+
+        final var refundFee = computeRefundFee(order);
+
+        final var refund = generateAssessCodeRefund(order.getId(), refundItem.getId(), refundFee);
+        final var savedRefund = assessCodeRefundRepository.save(refund);
+
+        return Map.of(
+                WechatPayRefundInvoker.REQ_M_FIELD_OUT_TRADE_NO, order.getId(),
+                WechatPayRefundInvoker.REQ_M_FIELD_OUT_REFUND_NO, savedRefund.getId(),
+                WechatPayRefundInvoker.REQ_M_FIELD_TOTAL_FEE, order.getFee(),
+                WechatPayRefundInvoker.REQ_M_FIELD_REFUND_FEE, refundFee);
     }
 
     /**
@@ -112,6 +146,19 @@ public class AssessCodeService {
         return assessCodeOrder;
     }
 
+    private AssessCodeRefund generateAssessCodeRefund(
+            String orderId, String orderItemId, Integer fee) {
+
+        final var assessCodeRefund = new AssessCodeRefund();
+        assessCodeRefund.setCreateTime(System.currentTimeMillis());
+        assessCodeRefund.setOrderId(orderId);
+        assessCodeRefund.setOrderItemId(orderItemId);
+        assessCodeRefund.setFee(fee);
+        assessCodeRefund.setState(AssessCodeRefund.State.REFUNDING);
+
+        return assessCodeRefund;
+    }
+
     /**
      * @return
      * @throws FailToGenerateAssessCode
@@ -143,11 +190,32 @@ public class AssessCodeService {
         return validCodes;
     }
 
+    private Integer computeRefundFee(AssessCodeOrder order) {
+
+        final var refundableCount = (int) order.getItems().stream().filter(item ->
+                item.getRefundId() == null ||
+                        AssessCodeRefund.State.REFUND_FAIL == item.getRefundState())
+                .count();
+
+        assert refundableCount > 0;
+
+        return AMOUNT_TO_FEE.get(refundableCount) -
+                AMOUNT_TO_FEE.get(refundableCount - 1);
+    }
+
     public static class InvalidAssessCodePurchaseAmount
             extends RuntimeException {
     }
 
     public static class FailToGenerateAssessCode
+            extends RuntimeException {
+    }
+
+    public static class NonRefundableException
+            extends RuntimeException {
+    }
+
+    public static class ConcurrentRefundDeny
             extends RuntimeException {
     }
 }

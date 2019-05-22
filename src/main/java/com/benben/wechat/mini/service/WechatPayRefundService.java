@@ -38,6 +38,14 @@ public class WechatPayRefundService {
         return refundWithRetry(reqFields, 0);
     }
 
+    /**
+     * @param reqFields
+     * @param retryCount
+     * @return
+     * @throws WechatPayRefundInvoker.TradeOverdueException
+     * @throws WechatPayRefundInvoker.NoEnoughBalanceException
+     * @throws FatalExternalApiInvokeException
+     */
     private Map<String, String> refundWithRetry(
             Map<String, Object> reqFields,
             int retryCount) {

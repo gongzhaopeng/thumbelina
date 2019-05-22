@@ -1,12 +1,19 @@
 package com.benben.wechat.mini.controller;
 
 import com.benben.wechat.mini.apiinvoker.FatalExternalApiInvokeException;
+import com.benben.wechat.mini.apiinvoker.WechatPayRefundInvoker;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
+import com.benben.wechat.mini.controller.exception.AssessCodeNotFoundException;
 import com.benben.wechat.mini.controller.exception.UserNotFoundException;
+import com.benben.wechat.mini.model.AssessCode;
+import com.benben.wechat.mini.model.AssessCodeRefund;
+import com.benben.wechat.mini.repository.AssessCodeOrderRepository;
+import com.benben.wechat.mini.repository.AssessCodeRepository;
 import com.benben.wechat.mini.repository.UserRepository;
 import com.benben.wechat.mini.service.AssessCodeService;
 import com.benben.wechat.mini.service.UserUpdateLockService;
 import com.benben.wechat.mini.service.WechatPayOrderService;
+import com.benben.wechat.mini.service.WechatPayRefundService;
 import com.benben.wechat.mini.util.WechatPayUtility;
 import lombok.Data;
 import lombok.Getter;
@@ -25,20 +32,29 @@ import javax.validation.constraints.Positive;
 public class AssessCodeController {
 
     final private UserRepository userRepository;
+    final private AssessCodeRepository assessCodeRepository;
+    final private AssessCodeOrderRepository assessCodeOrderRepository;
     final private UserUpdateLockService userUpdateLockService;
     final private AssessCodeService assessCodeService;
     final private WechatPayOrderService wechatPayOrderService;
+    final private WechatPayRefundService wechatPayRefundService;
 
     @Autowired
     public AssessCodeController(UserRepository userRepository,
+                                AssessCodeRepository assessCodeRepository,
+                                AssessCodeOrderRepository assessCodeOrderRepository,
                                 UserUpdateLockService userUpdateLockService,
                                 AssessCodeService assessCodeService,
-                                WechatPayOrderService wechatPayOrderService) {
+                                WechatPayOrderService wechatPayOrderService,
+                                WechatPayRefundService wechatPayRefundService) {
 
         this.userRepository = userRepository;
+        this.assessCodeRepository = assessCodeRepository;
+        this.assessCodeOrderRepository = assessCodeOrderRepository;
         this.userUpdateLockService = userUpdateLockService;
         this.assessCodeService = assessCodeService;
         this.wechatPayOrderService = wechatPayOrderService;
+        this.wechatPayRefundService = wechatPayRefundService;
     }
 
     /**
@@ -76,6 +92,81 @@ public class AssessCodeController {
         });
     }
 
+    /**
+     * @param refundReq
+     * @return
+     * @throws UserNotFoundException
+     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
+     * @throws AssessCodeNotFoundException
+     * @throws RefundOthersAssessCodeDeny
+     * @throws IllegalStateException
+     * @throws AssessCodeService.NonRefundableException
+     * @throws AssessCodeService.ConcurrentRefundDeny
+     * @throws WechatPayRefundInvoker.TradeOverdueException
+     * @throws WechatPayRefundInvoker.NoEnoughBalanceException
+     * @throws FatalExternalApiInvokeException
+     */
+    @PostMapping("/refund")
+    public RefundResp refund(
+            @Valid @RequestBody RefundReq refundReq) {
+
+        final var openid = refundReq.getOpenid();
+
+        if (!userRepository.existsById(openid)) {
+            throw new UserNotFoundException();
+        }
+
+        return userUpdateLockService.doWithLock(openid, () -> {
+
+            final var assessCode =
+                    assessCodeRepository.findById(refundReq.getAssessCode())
+                            .orElseThrow(AssessCodeNotFoundException::new);
+
+            if (!assessCode.getOwner().equals(openid)) {
+                throw new RefundOthersAssessCodeDeny();
+            }
+
+            final var ownerUser = userRepository.findById(openid)
+                    .orElseThrow(IllegalStateException::new);
+
+            final var order = assessCodeOrderRepository.findById(assessCode.getOrderId())
+                    .orElseThrow(IllegalStateException::new);
+            final var refundItem = order.getItems().stream()
+                    .filter(item -> item.getId().equals(assessCode.getOrderItemId()))
+                    .findFirst().orElseThrow(IllegalStateException::new);
+
+            final var businessFields =
+                    assessCodeService.constructWechatRefundBusinessFields(refundItem, order);
+
+            wechatPayRefundService.refund(businessFields);
+
+            final var refundId =
+                    businessFields.get(WechatPayRefundInvoker.REQ_M_FIELD_OUT_REFUND_NO).toString();
+
+            refundItem.setRefundId(refundId);
+            refundItem.setRefundState(AssessCodeRefund.State.REFUNDING);
+
+            assessCode.setState(AssessCode.State.REFUNDING);
+            assessCode.setRefundId(refundId);
+
+            ownerUser.getAssessCode(assessCode.getCode())
+                    .orElseThrow(IllegalStateException::new)
+                    .setState(AssessCode.State.REFUNDING);
+
+            userRepository.save(ownerUser);
+            assessCodeRepository.save(assessCode);
+            assessCodeOrderRepository.save(order);
+
+            final var resp = new RefundResp();
+            resp.setAssessCode(assessCode.getCode());
+            resp.setRefundId(refundId);
+            resp.setRefundFee(
+                    (Integer) businessFields.get(WechatPayRefundInvoker.REQ_M_FIELD_REFUND_FEE));
+
+            return resp;
+        });
+    }
+
     @ExceptionHandler(AssessCodeService.InvalidAssessCodePurchaseAmount.class)
     public CommonResponse invalidPurchaseAmountHandler() {
 
@@ -92,6 +183,56 @@ public class AssessCodeController {
         final var resp = new CommonResponse();
         resp.setStatusCode(CommonResponse.SC_WEPAY_NO_ENOUGH_BALANCE);
         resp.setStatusDetail("No enough balance in wechat:pay.");
+
+        return resp;
+    }
+
+    @ExceptionHandler(RefundOthersAssessCodeDeny.class)
+    public CommonResponse refundOthersAssessCodeHandler() {
+
+        final var resp = new CommonResponse();
+        resp.setStatusCode(CommonResponse.SC_REFUND_OTHERS_ASSESS_CODE_DENY);
+        resp.setStatusDetail("Refunding others assess-code denied.");
+
+        return resp;
+    }
+
+    @ExceptionHandler(AssessCodeService.NonRefundableException.class)
+    public CommonResponse assessCodeNonRefundableHandler() {
+
+        final var resp = new CommonResponse();
+        resp.setStatusCode(CommonResponse.SC_ASSESS_CODE_NON_REFUNDABLE);
+        resp.setStatusDetail("Assess-code nonrefundable.");
+
+        return resp;
+    }
+
+    @ExceptionHandler(AssessCodeService.ConcurrentRefundDeny.class)
+    public CommonResponse concurrentRefundDenyHandler() {
+
+        final var resp = new CommonResponse();
+        resp.setStatusCode(CommonResponse.SC_ASSESS_CODE_CONCURRENT_REFUND_DENY);
+        resp.setStatusDetail("Assess-codes purchased together is not allowed to refund concurrently.");
+
+        return resp;
+    }
+
+    @ExceptionHandler(WechatPayRefundInvoker.TradeOverdueException.class)
+    public CommonResponse tradeOverdueHandler() {
+
+        final var resp = new CommonResponse();
+        resp.setStatusCode(CommonResponse.SC_WEPAY_REFUND_TRADE_OVERDUE);
+        resp.setStatusDetail("Refund trade overdue, please contact the service provider.");
+
+        return resp;
+    }
+
+    @ExceptionHandler(WechatPayRefundInvoker.NoEnoughBalanceException.class)
+    public CommonResponse refundNoEnoughBalanceHandler() {
+
+        final var resp = new CommonResponse();
+        resp.setStatusCode(CommonResponse.SC_WEPAY_REFUND_NO_ENOUGH_BALANCE);
+        resp.setStatusDetail("Out of Refund-Service, please contact the service provider.");
 
         return resp;
     }
@@ -113,5 +254,29 @@ public class AssessCodeController {
 
         private String orderId;
         private WechatPayUtility.JsapiParams jsapiParams;
+    }
+
+    @Validated
+    @Data
+    static class RefundReq {
+
+        @NotBlank
+        private String openid;
+
+        @NotBlank
+        private String assessCode;
+    }
+
+    @Getter
+    @Setter
+    static class RefundResp extends CommonResponse {
+
+        private String assessCode;
+        private String refundId;
+        private Integer refundFee;
+    }
+
+    static class RefundOthersAssessCodeDeny
+            extends RuntimeException {
     }
 }
