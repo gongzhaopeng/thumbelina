@@ -27,6 +27,15 @@ public class User {
         );
     }
 
+    public void addAssessCode(AssessCode assessCode) {
+
+        if (assessCodes == null) {
+            assessCodes = new ArrayList<>();
+        }
+
+        assessCodes.add(assessCode);
+    }
+
     public Optional<Assessment> getAssessment(String assessmentId) {
 
         return Optional.ofNullable(assessments).flatMap(as ->
