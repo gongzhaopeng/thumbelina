@@ -13,6 +13,10 @@ public class WechatPayConfiguration {
 
     private String apiKey;
 
+    private String certPath;
+
+    private String certPassword;
+
     private String notifyUrl;
 
     private String refundNotifyUrl;

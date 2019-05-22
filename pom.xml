@@ -47,6 +47,10 @@
             <artifactId>commons-collections4</artifactId>
             <version>4.3</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.springfox</groupId>

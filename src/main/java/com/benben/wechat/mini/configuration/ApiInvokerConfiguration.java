@@ -45,7 +45,7 @@ public class ApiInvokerConfiguration {
 
     @Bean
     public WechatPayRefundInvoker
-    wechatPayRefundInvoker(RestTemplate restTemplate,
+    wechatPayRefundInvoker(@RestTemplateConfiguration.WepayCertRestTemplate RestTemplate restTemplate,
                            JsonUtility jsonUtility,
                            WechatMiniProgramConfiguration wechatMiniConfig,
                            WechatPayConfiguration wechatPayConfig) {
