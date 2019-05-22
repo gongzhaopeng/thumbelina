@@ -25,6 +25,7 @@ public class AssessCodeOrder {
     public static class Item {
 
         private String id;
+        private String assessCode;
         private String refundId;
         private AssessCodeRefund.State refundState;
     }

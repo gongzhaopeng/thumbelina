@@ -114,13 +114,18 @@ public class AssessCodeService {
 
         return IntStream.range(0, codes.size()).mapToObj(i -> {
 
+            final var orderItem = order.getItems().get(i);
+            final var code = codes.get(i);
+
             final var assessCode = new AssessCode();
-            assessCode.setCode(codes.get(i));
+            assessCode.setCode(code);
             assessCode.setCreateTime(System.currentTimeMillis());
             assessCode.setState(AssessCode.State.FRESH);
             assessCode.setOwner(order.getOwner());
             assessCode.setOrderId(order.getId());
-            assessCode.setOrderItemId(order.getItems().get(i).getId());
+            assessCode.setOrderItemId(orderItem.getId());
+
+            orderItem.setAssessCode(code);
 
             return assessCode;
         }).collect(Collectors.toList());

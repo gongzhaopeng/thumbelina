@@ -88,6 +88,12 @@ public class WechatPayUtility {
         return actualSign.equals(providedSign);
     }
 
+    /**
+     * @param cipherText
+     * @param apiKey
+     * @return
+     * @throws RefundNotifyDecryptException
+     */
     static public Map<String, String> decryptRefundNotify(
             String cipherText, String apiKey) {
 
@@ -239,7 +245,7 @@ public class WechatPayUtility {
     static public class RefundNotifyDecryptException
             extends RuntimeException {
 
-        public RefundNotifyDecryptException(
+        RefundNotifyDecryptException(
                 String message, Throwable reason) {
 
             super(message, reason);

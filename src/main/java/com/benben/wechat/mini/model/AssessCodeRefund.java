@@ -17,6 +17,7 @@ public class AssessCodeRefund {
     private State state;
     private String wepayNotify;
     private Long wepayNotifyTs;
+    private String wepayRid;
 
     public enum State {
 
