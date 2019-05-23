@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -18,6 +19,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.nio.charset.Charset;
 import java.security.KeyStore;
 
 @Configuration
@@ -27,7 +29,12 @@ public class RestTemplateConfiguration {
     @Primary
     public RestTemplate restTemplate() {
 
-        return new RestTemplate();
+        final var restTemplate = new RestTemplate();
+
+        setDefaultCharsetOfStringHttpMessageConverter(restTemplate,
+                Charset.forName("UTF-8"));
+
+        return restTemplate;
     }
 
     @Bean
@@ -48,9 +55,14 @@ public class RestTemplateConfiguration {
                 .setSSLContext(sslContext)
                 .build();
 
-        return builder.requestFactory(() ->
+        final var restTemplate = builder.requestFactory(() ->
                 new HttpComponentsClientHttpRequestFactory(client))
                 .build();
+
+        setDefaultCharsetOfStringHttpMessageConverter(restTemplate,
+                Charset.forName("UTF-8"));
+
+        return restTemplate;
     }
 
     private KeyStore wepayKeyStore(String certPath, String certPassword)
@@ -64,6 +76,21 @@ public class RestTemplateConfiguration {
         }
 
         return keyStore;
+    }
+
+    private void setDefaultCharsetOfStringHttpMessageConverter(
+            RestTemplate restTemplate, Charset defaultCharset) {
+
+        for (final var converter : restTemplate.getMessageConverters()) {
+
+            if (converter instanceof StringHttpMessageConverter) {
+
+                final var stringConverter =
+                        (StringHttpMessageConverter) converter;
+
+                stringConverter.setDefaultCharset(defaultCharset);
+            }
+        }
     }
 
     @Target({

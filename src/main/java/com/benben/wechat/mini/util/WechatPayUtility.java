@@ -6,6 +6,7 @@ import lombok.Data;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -52,7 +53,14 @@ public class WechatPayUtility {
 
         final var splicedString =
                 fieldsToSign.entrySet().stream()
-                        .filter(entry -> entry.getValue() != null)
+                        .filter(entry -> {
+                            final var value = entry.getValue();
+                            if (value == null) {
+                                return false;
+                            }
+                            return !(value instanceof String) ||
+                                    StringUtils.hasText((String) value);
+                        })
                         .sorted(Comparator.comparing(Map.Entry::getKey))
                         .map(entry -> entry.getKey() + '=' + entry.getValue().toString())
                         .reduce((s1, s2) -> s1 + "&" + s2).orElseThrow();

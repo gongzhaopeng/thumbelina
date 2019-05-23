@@ -1,14 +1,28 @@
 package com.benben.wechat.mini;
 
+import com.benben.wechat.mini.component.JsonUtility;
+import com.benben.wechat.mini.configuration.WechatPayConfiguration;
 import com.benben.wechat.mini.util.WechatPayUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Map;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 @Slf4j
 public class WechatPayUtilityTest {
+
+    @Autowired
+    private JsonUtility jsonUtility;
+
+    @Autowired
+    private WechatPayConfiguration wepayConfig;
 
     @Test
     public void parseXmlText() {
@@ -78,6 +92,19 @@ public class WechatPayUtilityTest {
                 fieldsToSign, apiKey, WechatPayUtility.SignType.MD5);
 
         Assert.assertEquals(expectedSign, actualSign);
+    }
+
+    @Test
+    public void checkRefundSign() {
+
+        final var jsonResp = "{\"transaction_id\":\"4200000322201905230936525580\",\"nonce_str\":\"v4qSc27fmyQGHnYY\",\"out_refund_no\":\"1558592445810\",\"sign\":\"A5F2AFA36FD49654969EC247DF0B0D8A\",\"return_msg\":\"OK\",\"mch_id\":\"1494681852\",\"refund_id\":\"50000400462019052309684108902\",\"cash_fee\":\"1\",\"out_trade_no\":\"5ce622da49d7446f9c20fa2a\",\"coupon_refund_fee\":\"0\",\"refund_channel\":\"\",\"appid\":\"wxc09ec1faa22cb365\",\"refund_fee\":\"1\",\"total_fee\":\"1\",\"result_code\":\"SUCCESS\",\"coupon_refund_count\":\"0\",\"cash_refund_fee\":\"1\",\"return_code\":\"SUCCESS\"}";
+
+        final var parsedResp = jsonUtility.parseJsonText(jsonResp, Map.class);
+
+        final var checkResult = WechatPayUtility.checkSign(parsedResp,
+                wepayConfig.getApiKey(), WechatPayUtility.SignType.MD5);
+
+        Assert.assertTrue(checkResult);
     }
 
     @Test

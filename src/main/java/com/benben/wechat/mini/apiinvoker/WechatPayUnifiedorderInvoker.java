@@ -140,7 +140,7 @@ public class WechatPayUnifiedorderInvoker {
         final var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_XML);
         final var request = new HttpEntity<>(
-                WechatPayUtility.toXmlText(reqFields), headers);
+                WechatPayUtility.toXmlText(clonedReqFields), headers);
 
         final var response = restTemplate.exchange(
                 URL,
@@ -153,27 +153,27 @@ public class WechatPayUnifiedorderInvoker {
             throw new FatalExternalApiInvokeException(
                     "The status-code in the response of wechat-api[pay.unifiedorder] is "
                             + response.getStatusCode().value() + ".\nrequest-fields:\n"
-                            + jsonUtility.toJsonString(reqFields));
+                            + jsonUtility.toJsonString(clonedReqFields));
         }
 
         final var respBody = WechatPayUtility.parseXmlText(response.getBody());
         if (respBody == null) {
             throw new FatalExternalApiInvokeException(
                     "The body in the response of wechat-api[pay.unifiedorder] is null.\nrequest-fields:\n"
-                            + jsonUtility.toJsonString(reqFields));
+                            + jsonUtility.toJsonString(clonedReqFields));
         }
 
         if (!respBody.getOrDefault(RESP_FIELD_RETURN_CODE, RETURN_CODE_FAIL).equals(RETURN_CODE_SUCCESS)) {
             throw new FatalExternalApiInvokeException(
                     "The return-code in the response of wechat-api[pay.unifiedorder] isn't 'SUCCESS'.\nrequest-fields:\n"
-                            + jsonUtility.toJsonString(reqFields) + "\nresponse-body:\n"
+                            + jsonUtility.toJsonString(clonedReqFields) + "\nresponse-body:\n"
                             + jsonUtility.toJsonString(respBody));
         }
 
         if (!WechatPayUtility.checkSign(new HashMap<>(respBody), apiKey, WechatPayUtility.SignType.MD5)) {
             throw new FatalExternalApiInvokeException(
                     "The sign in the response of wechat-api[pay.unifiedorder] is invalid.\nrequest-fields:\n"
-                            + jsonUtility.toJsonString(reqFields) + "\nresponse-body:\n"
+                            + jsonUtility.toJsonString(clonedReqFields) + "\nresponse-body:\n"
                             + jsonUtility.toJsonString(respBody));
         }
 
@@ -183,13 +183,13 @@ public class WechatPayUnifiedorderInvoker {
 
             if (errCode.equals(ERR_CODE_NOTENOUGH)) {
                 throw new NoEnoughBalanceException("request-fields:\n"
-                        + jsonUtility.toJsonString(reqFields) + "\nresponse-body:\n"
+                        + jsonUtility.toJsonString(clonedReqFields) + "\nresponse-body:\n"
                         + jsonUtility.toJsonString(respBody));
             }
 
             throw new FatalExternalApiInvokeException(
                     "The result-code in the response of wechat-api[pay.unifiedorder] is unacceptable.\nrequest-fields:\n"
-                            + jsonUtility.toJsonString(reqFields) + "\nresponse-body:\n"
+                            + jsonUtility.toJsonString(clonedReqFields) + "\nresponse-body:\n"
                             + jsonUtility.toJsonString(respBody));
         }
 
