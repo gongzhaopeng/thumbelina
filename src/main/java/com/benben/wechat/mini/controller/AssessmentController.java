@@ -81,8 +81,10 @@ public class AssessmentController {
                         userRepository.findById(createReq.getOpenid())
                                 .orElseThrow(IllegalStateException::new);
                 final var assessCodeOwner =
-                        userRepository.findById(codeOwnerId)
-                                .orElseThrow(IllegalStateException::new);
+                        createReq.getOpenid().equals(codeOwnerId) ?
+                                assessmentOwner :
+                                userRepository.findById(codeOwnerId)
+                                        .orElseThrow(IllegalStateException::new);
 
                 if (assessCode.getState() != AssessCode.State.FRESH) {
                     throw new AssessCodeUnusableException();
@@ -108,7 +110,9 @@ public class AssessmentController {
                 userRepository.save(assessCodeOwner);
                 assessCodeRepository.save(assessCode);
                 assessmentRepository.save(assessment);
-                userRepository.save(assessmentOwner);
+                if (assessCodeOwner != assessmentOwner) {
+                    userRepository.save(assessmentOwner);
+                }
 
                 final var resp = new AssessmentCreateResp();
                 resp.setId(assessment.getId());

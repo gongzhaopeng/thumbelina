@@ -2,6 +2,7 @@ package com.benben.wechat.mini.service;
 
 import com.benben.wechat.mini.apiinvoker.WechatPayRefundInvoker;
 import com.benben.wechat.mini.apiinvoker.WechatPayUnifiedorderInvoker;
+import com.benben.wechat.mini.configuration.AssessCodeConfiguration;
 import com.benben.wechat.mini.model.AssessCode;
 import com.benben.wechat.mini.model.AssessCodeOrder;
 import com.benben.wechat.mini.model.AssessCodeRefund;
@@ -23,25 +24,25 @@ import java.util.stream.IntStream;
 @Service
 public class AssessCodeService {
 
-    final static private List<Integer> AMOUNT_TO_FEE =
-            List.of(0, 1, 2, 3);
-
     final static private String ASSESS_CODE_WECHAT_ORDER_BODY =
             "本本教育:志愿填报系统:测评码";
 
     final static private int CODE_LENGTH = 8;
     final static private int MAX_CODE_GENERATE_RETRY = 3;
 
+    final private AssessCodeConfiguration assessCodeConfiguration;
     final private AssessCodeOrderRepository assessCodeOrderRepository;
     final private AssessCodeRepository assessCodeRepository;
     final private AssessCodeRefundRepository assessCodeRefundRepository;
 
     @Autowired
     public AssessCodeService(
+            AssessCodeConfiguration assessCodeConfiguration,
             AssessCodeOrderRepository assessCodeOrderRepository,
             AssessCodeRepository assessCodeRepository,
             AssessCodeRefundRepository assessCodeRefundRepository) {
 
+        this.assessCodeConfiguration = assessCodeConfiguration;
         this.assessCodeOrderRepository = assessCodeOrderRepository;
         this.assessCodeRepository = assessCodeRepository;
         this.assessCodeRefundRepository = assessCodeRefundRepository;
@@ -56,7 +57,8 @@ public class AssessCodeService {
     public Map<String, Object> constructWechatOrderBusinessFields(
             String ownerOpenid, Integer amount) {
 
-        return Optional.ofNullable(AMOUNT_TO_FEE.get(amount)).map(fee -> {
+        return Optional.ofNullable(
+                assessCodeConfiguration.getAmountToFee().get(amount)).map(fee -> {
 
             final var assessCodeOrder = generateAssessCodeOrder(
                     ownerOpenid, amount, fee);
@@ -204,8 +206,11 @@ public class AssessCodeService {
 
         assert refundableCount > 0;
 
-        return AMOUNT_TO_FEE.get(refundableCount) -
-                AMOUNT_TO_FEE.get(refundableCount - 1);
+        final var amountToFee =
+                assessCodeConfiguration.getAmountToFee();
+
+        return amountToFee.get(refundableCount) -
+                amountToFee.get(refundableCount - 1);
     }
 
     public static class InvalidAssessCodePurchaseAmount

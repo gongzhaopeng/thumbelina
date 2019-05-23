@@ -23,5 +23,4 @@ wechat:
     refund-retry-delay: 50
 
 assesscode:
-  purchase:
-    amount-to-fee: 0, 1, 2, 3
+  amount-to-fee: 0, 1, 2, 3
