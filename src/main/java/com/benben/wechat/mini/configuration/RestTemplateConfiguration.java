@@ -36,10 +36,9 @@ public class RestTemplateConfiguration {
             WechatPayConfiguration wepayConfig,
             RestTemplateBuilder builder) throws Exception {
 
-        final var certPassword = wepayConfig.getCertPassword();
+        final var certPassword = wepayConfig.getMchId();
 
-        final var keyStore = wepayKeyStore(
-                wepayConfig.getCertPath(), certPassword);
+        final var keyStore = wepayKeyStore(wepayConfig.getCertPath(), certPassword);
         final var sslContext = SSLContextBuilder.create()
                 .loadKeyMaterial(keyStore, certPassword.toCharArray())
                 .loadTrustMaterial(null, new TrustSelfSignedStrategy())
@@ -54,14 +53,14 @@ public class RestTemplateConfiguration {
                 .build();
     }
 
-    private KeyStore wepayKeyStore(String certPath, String password)
+    private KeyStore wepayKeyStore(String certPath, String certPassword)
             throws Exception {
 
         final var keyStore = KeyStore.getInstance("PKCS12");
         final var key = ResourceUtils.getFile(certPath);
 
         try (InputStream in = new FileInputStream(key)) {
-            keyStore.load(in, password.toCharArray());
+            keyStore.load(in, certPassword.toCharArray());
         }
 
         return keyStore;
