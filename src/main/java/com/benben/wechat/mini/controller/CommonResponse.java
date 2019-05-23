@@ -11,9 +11,11 @@ class CommonResponse {
 
     final static public Integer SC_SERVICE_BUSY = 10000000;
 
-    final static public Integer SC_WEPAY_NO_ENOUGH_BALANCE = 10000100;
-    final static public Integer SC_WEPAY_REFUND_TRADE_OVERDUE = 10000101;
-    final static public Integer SC_WEPAY_REFUND_NO_ENOUGH_BALANCE = 10000102;
+    final static public Integer SC_WECHAT_INVALID_JS_CODE = 10000100;
+
+    final static public Integer SC_WEPAY_NO_ENOUGH_BALANCE = 10000150;
+    final static public Integer SC_WEPAY_REFUND_TRADE_OVERDUE = 10000151;
+    final static public Integer SC_WEPAY_REFUND_NO_ENOUGH_BALANCE = 10000152;
 
     final static public Integer SC_INVALID_ASSESS_CODE_PURCHASE_AMOUNT = 10000200;
 

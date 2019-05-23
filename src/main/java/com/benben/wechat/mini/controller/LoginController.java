@@ -67,6 +67,16 @@ public class LoginController {
         return WechatJscodeLoginResp.of(loginedUser);
     }
 
+    @ExceptionHandler(WechatAuthCode2SessionInvoker.InvalidJsCodeException.class)
+    public CommonResponse invalidJsCodeHandler() {
+
+        final var resp = new CommonResponse();
+        resp.setStatusCode(CommonResponse.SC_WECHAT_INVALID_JS_CODE);
+        resp.setStatusDetail("Invalid Js-Code");
+
+        return resp;
+    }
+
     private User constructNewUser(
             WechatJscodeLoginReq loginReq,
             WechatAuthCode2SessionInvoker.Return wechatInvokeRet) {

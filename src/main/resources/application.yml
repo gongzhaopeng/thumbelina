@@ -1,5 +1,7 @@
 server:
   port: 9000
+  servlet:
+    context-path: '/thumbelina'
 
 spring:
   data:
@@ -8,13 +10,18 @@ spring:
 
 wechat:
   mini-program:
-    app-id: "MOCKED_APP_ID"
-    app-secret: "MOCKED_APP_SECRET"
+    app-id: "wxc09ec1faa22cb365"
+    app-secret: "6916806cbe159c5714e8530201b1fa74"
   pay:
-    mch-id: "MOCKED_MCH_ID"
-    api-key: "MOCKED_API_KEY"
-    notify-url: "MOCKED_NOTIFY_URL"
-    refund-notify-url: "MOCKED_REFUND_NOTIFY_URL"
+    mch-id: "1494681852"
+    api-key: "5A226E214F184906BA081D416C4BBEDU"
+    cert-path: "classpath:apiclient_cert.p12"
+    notify-url: "https://api.jolii.net/thumbelina/wechat/pay/notify"
+    refund-notify-url: "https://api.jolii.net/thumbelina/wechat/pay/notify/refund"
     refund-retry-times: 2
     # Unit => Millisecond
     refund-retry-delay: 50
+
+assesscode:
+  purchase:
+    amount-to-fee: 0, 1, 2, 3

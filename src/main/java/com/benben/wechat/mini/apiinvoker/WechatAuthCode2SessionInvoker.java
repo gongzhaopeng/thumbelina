@@ -1,6 +1,7 @@
 package com.benben.wechat.mini.apiinvoker;
 
 import com.benben.wechat.mini.component.JsonUtility;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestTemplate;
@@ -16,7 +17,6 @@ public class WechatAuthCode2SessionInvoker {
 
     final static private String GRANT_TYPE = "authorization_code";
 
-    final static private int ERRCODE_SUCCESS = 0;
     final static private int ERRCODE_INVALID_CODE = 40029;
 
     final private RestTemplate restTemplate;
@@ -64,7 +64,7 @@ public class WechatAuthCode2SessionInvoker {
 
         return ret.map(r -> {
 
-            if (r.errcode == ERRCODE_SUCCESS) {
+            if (r.errcode == null) {
                 return r;
             } else if (r.errcode == ERRCODE_INVALID_CODE) {
                 throw new InvalidJsCodeException();
@@ -80,6 +80,7 @@ public class WechatAuthCode2SessionInvoker {
     public static class Return {
 
         private String openid;
+        @JsonProperty("session_key")
         private String sessionKey;
         private String unionid;
 

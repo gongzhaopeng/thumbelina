@@ -33,6 +33,9 @@ public class ApiInvokerConfiguration {
                                  WechatMiniProgramConfiguration wechatMiniConfig,
                                  WechatPayConfiguration wechatPayConfig) {
 
+        // 124.126.1.229
+        final var hostIp = HostInformationExtractor.getHostIp();
+
         return new WechatPayUnifiedorderInvoker(
                 restTemplate,
                 jsonUtility,
@@ -40,7 +43,7 @@ public class ApiInvokerConfiguration {
                 wechatPayConfig.getMchId(),
                 wechatPayConfig.getApiKey(),
                 wechatPayConfig.getNotifyUrl(),
-                HostInformationExtractor.getHostIp());
+                hostIp);
     }
 
     @Bean
