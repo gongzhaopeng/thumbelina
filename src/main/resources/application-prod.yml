@@ -1,0 +1,7 @@
+assesscode:
+  purchase:
+    amount-to-fee: 0, 1, 2, 3
+
+wechat:
+  pay:
+    cert-path: "/home/thumbelina/apiclient_cert.p12"

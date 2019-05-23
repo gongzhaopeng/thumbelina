@@ -108,13 +108,16 @@ public class WechatPayUtility {
         try {
             final var decodedCipherText =
                     Base64Utils.decodeFromString(cipherText);
+
             final var decryptKey =
-                    DigestUtils.md5Digest(apiKey.getBytes());
+                    DigestUtils.md5DigestAsHex(apiKey.getBytes())
+                            .toLowerCase();
 
             final var cipher =
                     Cipher.getInstance("AES/ECB/PKCS7Padding",
                             "BC");
-            final var keySpec = new SecretKeySpec(decryptKey, "AES");
+            final var keySpec =
+                    new SecretKeySpec(decryptKey.getBytes(), "AES");
             cipher.init(Cipher.DECRYPT_MODE, keySpec);
             final var plainText =
                     new String(cipher.doFinal(decodedCipherText),
