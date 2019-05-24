@@ -33,6 +33,8 @@ public class Assessment {
                     final var newModule = new Module();
                     newModule.setId(moduleId);
 
+                    modules.add(newModule);
+
                     return newModule;
                 });
     }
