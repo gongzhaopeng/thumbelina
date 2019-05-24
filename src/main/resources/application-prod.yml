@@ -1,3 +1,6 @@
+logging:
+  path: '/home/thumbelina/'
+
 wechat:
   pay:
     cert-path: "/home/thumbelina/apiclient_cert.p12"

@@ -8,6 +8,9 @@ spring:
     mongodb:
       database: 'sich_intent'
 
+logging:
+  file: 'thumbelina.log'
+
 wechat:
   mini-program:
     app-id: "wxc09ec1faa22cb365"
