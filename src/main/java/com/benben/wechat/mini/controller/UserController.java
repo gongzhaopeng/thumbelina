@@ -29,39 +29,39 @@ public class UserController {
     }
 
     /**
-     * @param openid
+     * @param id
      * @return
      * @throws UserNotFoundException
      */
-    @GetMapping("/{openid}")
+    @GetMapping("/{id}")
     public UserInfoResp getUserInfoByOpenid(
-            @PathVariable("openid") String openid) {
+            @PathVariable("id") String id) {
 
-        final var user = userRepository.findById(openid)
+        final var user = userRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
 
         return UserInfoResp.of(user);
     }
 
     /**
-     * @param openid
+     * @param id
      * @param customProfile
      * @return
      * @throws UserNotFoundException
      * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
      */
-    @PutMapping("/{openid}/profile/custom")
+    @PutMapping("/{id}/profile/custom")
     public CustomProfileUpdateResp updateCustomProfile(
-            @PathVariable("openid") String openid,
+            @PathVariable("id") String id,
             @Valid @RequestBody User.CustomProfile customProfile) {
 
-        if (!userRepository.existsById(openid)) {
+        if (!userRepository.existsById(id)) {
             throw new UserNotFoundException();
         }
 
-        userUpdateLockService.doWithLock(openid, () -> {
+        userUpdateLockService.doWithLock(id, () -> {
 
-            final var user = userRepository.findById(openid)
+            final var user = userRepository.findById(id)
                     .map(u -> {
                         u.setCustomProfile(customProfile);
                         return u;
@@ -81,17 +81,15 @@ public class UserController {
         static UserInfoResp of(User user) {
 
             final var resp = new UserInfoResp();
-            resp.setOpenid(user.getOpenid());
+            resp.setId(user.getId());
             resp.setCustomProfile(user.getCustomProfile());
-            resp.setAssessCodes(user.getAssessCodes());
             resp.setAssessments(user.getAssessments());
 
             return resp;
         }
 
-        private String openid;
+        private String id;
         private User.CustomProfile customProfile;
-        private List<User.AssessCode> assessCodes;
         private List<User.Assessment> assessments;
     }
 

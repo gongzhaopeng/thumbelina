@@ -12,12 +12,11 @@
     <artifactId>thumbelina</artifactId>
     <version>1.0</version>
     <name>thumbelina</name>
-    <description>Backend for weixin-mini-program, supporting login, pay, share, etc.</description>
+    <description>Backend for ape:h5.</description>
 
     <properties>
         <java.version>11</java.version>
         <swagger.version>2.9.2</swagger.version>
-        <bouncycastle.version>1.61</bouncycastle.version>
     </properties>
 
     <dependencies>
@@ -61,12 +60,6 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
             <version>${swagger.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>${bouncycastle.version}</version>
         </dependency>
 
         <dependency>

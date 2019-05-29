@@ -17,7 +17,6 @@ public class Assessment {
     private Long createTime;
     private String subject;
     private String owner;
-    private String assessCode;
     private List<Module> modules;
 
     public Module forceAcquireModule(String moduleId) {

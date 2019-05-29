@@ -1,12 +1,9 @@
 package com.benben.wechat.mini.controller;
 
-import com.benben.wechat.mini.controller.exception.AssessCodeNotFoundException;
 import com.benben.wechat.mini.controller.exception.AssessmentNotFoundException;
 import com.benben.wechat.mini.controller.exception.UserNotFoundException;
-import com.benben.wechat.mini.model.AssessCode;
 import com.benben.wechat.mini.model.Assessment;
 import com.benben.wechat.mini.model.User;
-import com.benben.wechat.mini.repository.AssessCodeRepository;
 import com.benben.wechat.mini.repository.AssessmentRepository;
 import com.benben.wechat.mini.repository.UserRepository;
 import com.benben.wechat.mini.service.UserUpdateLockService;
@@ -22,7 +19,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 @RestController
 @RequestMapping("/assessments")
@@ -30,19 +26,16 @@ public class AssessmentController {
 
     final private AssessmentRepository assessmentRepository;
     final private UserRepository userRepository;
-    final private AssessCodeRepository assessCodeRepository;
     final private UserUpdateLockService userUpdateLockService;
 
     @Autowired
     public AssessmentController(
             AssessmentRepository assessmentRepository,
             UserRepository userRepository,
-            AssessCodeRepository assessCodeRepository,
             UserUpdateLockService userUpdateLockService) {
 
         this.assessmentRepository = assessmentRepository;
         this.userRepository = userRepository;
-        this.assessCodeRepository = assessCodeRepository;
         this.userUpdateLockService = userUpdateLockService;
     }
 
@@ -50,10 +43,8 @@ public class AssessmentController {
      * @param createReq
      * @return
      * @throws UserNotFoundException
-     * @throws AssessCodeNotFoundException
      * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
      * @throws IllegalStateException
-     * @throws AssessCodeUnusableException
      */
     @PostMapping
     public AssessmentCreateResp createAssessment(
@@ -63,69 +54,28 @@ public class AssessmentController {
             throw new UserNotFoundException();
         }
 
-//        if (!assessCodeRepository.existsById(createReq.getAssessCode())) {
-//            throw new AssessCodeNotFoundException();
-//        }
-
         return userUpdateLockService.doWithLock(createReq.getOpenid(), () -> {
 
-//            final var codeOwnerId = assessCodeRepository.findById(createReq.getAssessCode())
-//                    .orElseThrow(IllegalStateException::new).getOwner();
+            final var assessmentOwner =
+                    userRepository.findById(createReq.getOpenid())
+                            .orElseThrow(IllegalStateException::new);
 
-            final Callable<AssessmentCreateResp> task = () -> {
+            final var assessment = constructAssessment(
+                    createReq.getSubject(), createReq.getOpenid());
 
-//                final var assessCode =
-//                        assessCodeRepository.findById(createReq.getAssessCode())
-//                                .orElseThrow(IllegalStateException::new);
-                final var assessmentOwner =
-                        userRepository.findById(createReq.getOpenid())
-                                .orElseThrow(IllegalStateException::new);
-//                final var assessCodeOwner =
-//                        createReq.getOpenid().equals(codeOwnerId) ?
-//                                assessmentOwner :
-//                                userRepository.findById(codeOwnerId)
-//                                        .orElseThrow(IllegalStateException::new);
-//
-//                if (assessCode.getState() != AssessCode.State.FRESH) {
-//                    throw new AssessCodeUnusableException();
-//                }
+            final var userAssessment = new User.Assessment();
+            userAssessment.setId(assessment.getId());
+            userAssessment.setCreateTime(assessment.getCreateTime());
+            userAssessment.setSubject(assessment.getSubject());
+            assessmentOwner.addAssessment(userAssessment);
 
-                final var assessment = constructAssessment(
-                        createReq.getSubject(), createReq.getOpenid(), createReq.getAssessCode());
+            assessmentRepository.save(assessment);
+            userRepository.save(assessmentOwner);
 
-//                assessCode.setState(AssessCode.State.OCCUPIED);
-//                assessCode.setOccupiedBy(createReq.getOpenid());
-//                assessCode.setAssessmentId(assessment.getId());
+            final var resp = new AssessmentCreateResp();
+            resp.setId(assessment.getId());
 
-                final var userAssessment = new User.Assessment();
-                userAssessment.setId(assessment.getId());
-                userAssessment.setCreateTime(assessment.getCreateTime());
-                userAssessment.setSubject(assessment.getSubject());
-                assessmentOwner.addAssessment(userAssessment);
-
-//                assessCodeOwner.getAssessCode(assessCode.getCode())
-//                        .orElseThrow(IllegalStateException::new)
-//                        .setState(assessCode.getState());
-//
-//                userRepository.save(assessCodeOwner);
-//                assessCodeRepository.save(assessCode);
-                assessmentRepository.save(assessment);
-//                if (assessCodeOwner != assessmentOwner) {
-                    userRepository.save(assessmentOwner);
-//                }
-
-                final var resp = new AssessmentCreateResp();
-                resp.setId(assessment.getId());
-
-                return resp;
-            };
-
-            return task.call(); // TODO     <= OR =>
-//            if (codeOwnerId.equals(createReq.getOpenid())) {
-//                return task.call();
-//            } else {
-//                return userUpdateLockService.doWithLock(codeOwnerId, task);
-//            }
+            return resp;
         });
     }
 
@@ -180,25 +130,14 @@ public class AssessmentController {
         });
     }
 
-    @ExceptionHandler(AssessCodeUnusableException.class)
-    public CommonResponse assessCodeUnusableHandler() {
-
-        final var resp = new CommonResponse();
-        resp.setStatusCode(CommonResponse.SC_ASSESS_CODE_UNUSABLE);
-        resp.setStatusDetail("Assess-code unusable.");
-
-        return resp;
-    }
-
     private Assessment constructAssessment(
-            String subject, String owner, String assessCode) {
+            String subject, String owner) {
 
         final var assessment = new Assessment();
         assessment.setId(new ObjectId().toString());
         assessment.setCreateTime(System.currentTimeMillis());
         assessment.setSubject(subject);
         assessment.setOwner(owner);
-        assessment.setAssessCode(assessCode);
 
         return assessment;
     }
@@ -208,8 +147,6 @@ public class AssessmentController {
     static class AssessmentCreateReq {
         @NotBlank
         private String openid;
-        @NotBlank
-        private String assessCode;
         @NotBlank
         private String subject;
     }
@@ -256,8 +193,5 @@ public class AssessmentController {
     @Getter
     @Setter
     static class ModuleAnswersUpdateResp extends CommonResponse {
-    }
-
-    static class AssessCodeUnusableException extends RuntimeException {
     }
 }

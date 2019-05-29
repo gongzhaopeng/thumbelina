@@ -19,7 +19,7 @@ public class UserUpdateLockService {
 
     static private String lockKey(String openid) {
         return String.format(
-                "intent:lock:user:update:%s", openid);
+                "intent:ape:lock:user:update:%s", openid);
     }
 
     private StringRedisTemplate redisTemplate;

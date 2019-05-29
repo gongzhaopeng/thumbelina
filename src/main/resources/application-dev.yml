@@ -8,10 +8,3 @@ spring:
 
 logging:
   path: '/home/thumbelina/'
-
-wechat:
-  pay:
-    cert-path: "/home/thumbelina/apiclient_cert.p12"
-
-assesscode:
-  amount-to-fee: 0, 1, 2, 3

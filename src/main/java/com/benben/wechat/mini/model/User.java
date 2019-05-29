@@ -11,30 +11,10 @@ import java.util.*;
 public class User {
 
     @Id
-    private String openid;
+    private String id;
     private Long createTime;
-    private WechatInfo wechat;
     private CustomProfile customProfile;
-    private List<AssessCode> assessCodes;
     private List<Assessment> assessments;
-
-    public Optional<AssessCode> getAssessCode(String code) {
-
-        return Optional.ofNullable(assessCodes).flatMap(acs ->
-                acs.stream()
-                        .filter(ac -> code.equals(ac.getCode()))
-                        .findFirst()
-        );
-    }
-
-    public void addAssessCode(AssessCode assessCode) {
-
-        if (assessCodes == null) {
-            assessCodes = new ArrayList<>();
-        }
-
-        assessCodes.add(assessCode);
-    }
 
     public Optional<Assessment> getAssessment(String assessmentId) {
 
@@ -55,27 +35,6 @@ public class User {
     }
 
     @Data
-    public static class WechatInfo {
-
-        private WechatLoginInfo login;
-        private String nickName;
-        private String avatarUrl;
-        private String gender;
-        private String city;
-        private String province;
-        private String country;
-        private String language;
-    }
-
-    @Data
-    public static class WechatLoginInfo {
-
-        private String sessionKey;
-        private String unionid;
-        private Long loginTime;
-    }
-
-    @Data
     public static class CustomProfile {
 
         private String gender;
@@ -93,14 +52,6 @@ public class User {
         private List<String> favorSpecs;
         private List<String> location;
         private String school;
-    }
-
-    @Data
-    public static class AssessCode {
-
-        private String code;
-        private Long createTime;
-        private com.benben.wechat.mini.model.AssessCode.State state;
     }
 
     @Data
