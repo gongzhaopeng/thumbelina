@@ -63,39 +63,39 @@ public class AssessmentController {
             throw new UserNotFoundException();
         }
 
-        if (!assessCodeRepository.existsById(createReq.getAssessCode())) {
-            throw new AssessCodeNotFoundException();
-        }
+//        if (!assessCodeRepository.existsById(createReq.getAssessCode())) {
+//            throw new AssessCodeNotFoundException();
+//        }
 
         return userUpdateLockService.doWithLock(createReq.getOpenid(), () -> {
 
-            final var codeOwnerId = assessCodeRepository.findById(createReq.getAssessCode())
-                    .orElseThrow(IllegalStateException::new).getOwner();
+//            final var codeOwnerId = assessCodeRepository.findById(createReq.getAssessCode())
+//                    .orElseThrow(IllegalStateException::new).getOwner();
 
             final Callable<AssessmentCreateResp> task = () -> {
 
-                final var assessCode =
-                        assessCodeRepository.findById(createReq.getAssessCode())
-                                .orElseThrow(IllegalStateException::new);
+//                final var assessCode =
+//                        assessCodeRepository.findById(createReq.getAssessCode())
+//                                .orElseThrow(IllegalStateException::new);
                 final var assessmentOwner =
                         userRepository.findById(createReq.getOpenid())
                                 .orElseThrow(IllegalStateException::new);
-                final var assessCodeOwner =
-                        createReq.getOpenid().equals(codeOwnerId) ?
-                                assessmentOwner :
-                                userRepository.findById(codeOwnerId)
-                                        .orElseThrow(IllegalStateException::new);
-
-                if (assessCode.getState() != AssessCode.State.FRESH) {
-                    throw new AssessCodeUnusableException();
-                }
+//                final var assessCodeOwner =
+//                        createReq.getOpenid().equals(codeOwnerId) ?
+//                                assessmentOwner :
+//                                userRepository.findById(codeOwnerId)
+//                                        .orElseThrow(IllegalStateException::new);
+//
+//                if (assessCode.getState() != AssessCode.State.FRESH) {
+//                    throw new AssessCodeUnusableException();
+//                }
 
                 final var assessment = constructAssessment(
-                        createReq.getSubject(), createReq.getOpenid(), assessCode.getCode());
+                        createReq.getSubject(), createReq.getOpenid(), createReq.getAssessCode());
 
-                assessCode.setState(AssessCode.State.OCCUPIED);
-                assessCode.setOccupiedBy(createReq.getOpenid());
-                assessCode.setAssessmentId(assessment.getId());
+//                assessCode.setState(AssessCode.State.OCCUPIED);
+//                assessCode.setOccupiedBy(createReq.getOpenid());
+//                assessCode.setAssessmentId(assessment.getId());
 
                 final var userAssessment = new User.Assessment();
                 userAssessment.setId(assessment.getId());
@@ -103,16 +103,16 @@ public class AssessmentController {
                 userAssessment.setSubject(assessment.getSubject());
                 assessmentOwner.addAssessment(userAssessment);
 
-                assessCodeOwner.getAssessCode(assessCode.getCode())
-                        .orElseThrow(IllegalStateException::new)
-                        .setState(assessCode.getState());
-
-                userRepository.save(assessCodeOwner);
-                assessCodeRepository.save(assessCode);
+//                assessCodeOwner.getAssessCode(assessCode.getCode())
+//                        .orElseThrow(IllegalStateException::new)
+//                        .setState(assessCode.getState());
+//
+//                userRepository.save(assessCodeOwner);
+//                assessCodeRepository.save(assessCode);
                 assessmentRepository.save(assessment);
-                if (assessCodeOwner != assessmentOwner) {
+//                if (assessCodeOwner != assessmentOwner) {
                     userRepository.save(assessmentOwner);
-                }
+//                }
 
                 final var resp = new AssessmentCreateResp();
                 resp.setId(assessment.getId());
@@ -120,11 +120,12 @@ public class AssessmentController {
                 return resp;
             };
 
-            if (codeOwnerId.equals(createReq.getOpenid())) {
-                return task.call();
-            } else {
-                return userUpdateLockService.doWithLock(codeOwnerId, task);
-            }
+            return task.call(); // TODO     <= OR =>
+//            if (codeOwnerId.equals(createReq.getOpenid())) {
+//                return task.call();
+//            } else {
+//                return userUpdateLockService.doWithLock(codeOwnerId, task);
+//            }
         });
     }
 
