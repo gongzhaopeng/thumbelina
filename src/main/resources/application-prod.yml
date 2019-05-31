@@ -4,7 +4,7 @@ server:
 spring:
   data:
     mongodb:
-      uri: "mongodb://thumbelina:B409F51C-98CC-4FED-A8AD-E7516A4BF42D@localhost:27017/sich_intent"
+      uri: "mongodb://thumbelina:B409F51C-98CC-4FED-A8AD-E7516A4BF42D@localhost:27017/intent_ape"
 
 logging:
   path: '/home/thumbelina/'

@@ -3,7 +3,6 @@ package com.benben.wechat.mini.controller;
 import com.benben.wechat.mini.controller.exception.UserNotFoundException;
 import com.benben.wechat.mini.model.User;
 import com.benben.wechat.mini.repository.UserRepository;
-import com.benben.wechat.mini.service.UserUpdateLockService;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +15,12 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
 
-    final private UserUpdateLockService userUpdateLockService;
     final private UserRepository userRepository;
 
     @Autowired
     public UserController(
-            UserUpdateLockService userUpdateLockService,
             UserRepository userRepository) {
 
-        this.userUpdateLockService = userUpdateLockService;
         this.userRepository = userRepository;
     }
 
@@ -48,28 +44,18 @@ public class UserController {
      * @param customProfile
      * @return
      * @throws UserNotFoundException
-     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
      */
     @PutMapping("/{id}/profile/custom")
     public CustomProfileUpdateResp updateCustomProfile(
             @PathVariable("id") String id,
             @Valid @RequestBody User.CustomProfile customProfile) {
 
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException();
-        }
+        final var user = userRepository.findById(id)
+                .orElseThrow(UserNotFoundException::new);
 
-        userUpdateLockService.doWithLock(id, () -> {
+        user.setCustomProfile(customProfile);
 
-            final var user = userRepository.findById(id)
-                    .map(u -> {
-                        u.setCustomProfile(customProfile);
-                        return u;
-                    })
-                    .orElseThrow();
-
-            return userRepository.save(user);
-        });
+        userRepository.save(user);
 
         return new CustomProfileUpdateResp();
     }

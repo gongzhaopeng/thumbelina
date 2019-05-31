@@ -7,7 +7,7 @@ spring:
   data:
     mongodb:
       uri: "mongodb://admin:abc123def456@localhost:27017/admin"
-      database: 'sich_intent'
+      database: 'intent_ape'
 
 logging:
   file: 'thumbelina.log'

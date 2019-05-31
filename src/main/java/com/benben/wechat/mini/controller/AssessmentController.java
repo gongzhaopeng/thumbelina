@@ -6,7 +6,6 @@ import com.benben.wechat.mini.model.Assessment;
 import com.benben.wechat.mini.model.User;
 import com.benben.wechat.mini.repository.AssessmentRepository;
 import com.benben.wechat.mini.repository.UserRepository;
-import com.benben.wechat.mini.service.UserUpdateLockService;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,57 +25,46 @@ public class AssessmentController {
 
     final private AssessmentRepository assessmentRepository;
     final private UserRepository userRepository;
-    final private UserUpdateLockService userUpdateLockService;
 
     @Autowired
     public AssessmentController(
             AssessmentRepository assessmentRepository,
-            UserRepository userRepository,
-            UserUpdateLockService userUpdateLockService) {
+            UserRepository userRepository) {
 
         this.assessmentRepository = assessmentRepository;
         this.userRepository = userRepository;
-        this.userUpdateLockService = userUpdateLockService;
     }
 
     /**
      * @param createReq
      * @return
      * @throws UserNotFoundException
-     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
      * @throws IllegalStateException
      */
     @PostMapping
     public AssessmentCreateResp createAssessment(
             @Valid @RequestBody AssessmentCreateReq createReq) {
 
-        if (!userRepository.existsById(createReq.getOpenid())) {
-            throw new UserNotFoundException();
-        }
+        final var assessmentOwner =
+                userRepository.findById(createReq.getId())
+                        .orElseThrow(UserNotFoundException::new);
 
-        return userUpdateLockService.doWithLock(createReq.getOpenid(), () -> {
+        final var assessment = constructAssessment(
+                createReq.getSubject(), createReq.getId());
 
-            final var assessmentOwner =
-                    userRepository.findById(createReq.getOpenid())
-                            .orElseThrow(IllegalStateException::new);
+        final var userAssessment = new User.Assessment();
+        userAssessment.setId(assessment.getId());
+        userAssessment.setCreateTime(assessment.getCreateTime());
+        userAssessment.setSubject(assessment.getSubject());
+        assessmentOwner.addAssessment(userAssessment);
 
-            final var assessment = constructAssessment(
-                    createReq.getSubject(), createReq.getOpenid());
+        assessmentRepository.save(assessment);
+        userRepository.save(assessmentOwner);
 
-            final var userAssessment = new User.Assessment();
-            userAssessment.setId(assessment.getId());
-            userAssessment.setCreateTime(assessment.getCreateTime());
-            userAssessment.setSubject(assessment.getSubject());
-            assessmentOwner.addAssessment(userAssessment);
+        final var resp = new AssessmentCreateResp();
+        resp.setId(assessment.getId());
 
-            assessmentRepository.save(assessment);
-            userRepository.save(assessmentOwner);
-
-            final var resp = new AssessmentCreateResp();
-            resp.setId(assessment.getId());
-
-            return resp;
-        });
+        return resp;
     }
 
     /**
@@ -98,7 +86,6 @@ public class AssessmentController {
      * @param moduleId
      * @param updateReq
      * @return
-     * @throws UserUpdateLockService.FailToAcquireUserUpdateLock
      * @throws AssessmentNotFoundException
      * @throws UserNotFoundException
      * @throws IllegalStateException
@@ -109,25 +96,22 @@ public class AssessmentController {
             @PathVariable("module-id") String moduleId,
             @Valid @RequestBody ModuleAnswersUpdateReq updateReq) {
 
-        return userUpdateLockService.doWithLock(updateReq.getOpenid(), () -> {
+        final var assessment = assessmentRepository.findById(assessmentId)
+                .orElseThrow(AssessmentNotFoundException::new);
+        final var owner = userRepository.findById(updateReq.getId())
+                .orElseThrow(UserNotFoundException::new);
 
-            final var assessment = assessmentRepository.findById(assessmentId)
-                    .orElseThrow(AssessmentNotFoundException::new);
-            final var owner = userRepository.findById(updateReq.getOpenid())
-                    .orElseThrow(UserNotFoundException::new);
+        final var module = assessment.forceAcquireModule(moduleId);
+        module.setAnswers(updateReq.getAnswers());
 
-            final var module = assessment.forceAcquireModule(moduleId);
-            module.setAnswers(updateReq.getAnswers());
+        owner.getAssessment(assessmentId)
+                .orElseThrow(IllegalStateException::new)
+                .addCompletedModule(moduleId);
 
-            owner.getAssessment(assessmentId)
-                    .orElseThrow(IllegalStateException::new)
-                    .addCompletedModule(moduleId);
+        assessmentRepository.save(assessment);
+        userRepository.save(owner);
 
-            assessmentRepository.save(assessment);
-            userRepository.save(owner);
-
-            return new ModuleAnswersUpdateResp();
-        });
+        return new ModuleAnswersUpdateResp();
     }
 
     private Assessment constructAssessment(
@@ -146,7 +130,7 @@ public class AssessmentController {
     @Data
     static class AssessmentCreateReq {
         @NotBlank
-        private String openid;
+        private String id;
         @NotBlank
         private String subject;
     }
@@ -184,7 +168,7 @@ public class AssessmentController {
     static class ModuleAnswersUpdateReq {
 
         @NotBlank
-        private String openid;
+        private String id;
 
         @NotNull
         private List<Assessment.Answer> answers;
