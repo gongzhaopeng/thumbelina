@@ -46,11 +46,11 @@ public class AssessmentController {
             @Valid @RequestBody AssessmentCreateReq createReq) {
 
         final var assessmentOwner =
-                userRepository.findById(createReq.getId())
+                userRepository.findById(createReq.getOwnerId())
                         .orElseThrow(UserNotFoundException::new);
 
         final var assessment = constructAssessment(
-                createReq.getSubject(), createReq.getId());
+                createReq.getSubject(), createReq.getOwnerId());
 
         final var userAssessment = new User.Assessment();
         userAssessment.setId(assessment.getId());
@@ -130,7 +130,7 @@ public class AssessmentController {
     @Data
     static class AssessmentCreateReq {
         @NotBlank
-        private String id;
+        private String ownerId;
         @NotBlank
         private String subject;
     }

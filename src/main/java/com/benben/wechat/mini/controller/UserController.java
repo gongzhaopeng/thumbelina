@@ -30,7 +30,7 @@ public class UserController {
      * @throws UserNotFoundException
      */
     @GetMapping("/{id}")
-    public UserInfoResp getUserInfoByOpenid(
+    public UserInfoResp getUserInfoById(
             @PathVariable("id") String id) {
 
         final var user = userRepository.findById(id)
