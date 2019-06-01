@@ -98,7 +98,7 @@ public class AssessmentController {
 
         final var assessment = assessmentRepository.findById(assessmentId)
                 .orElseThrow(AssessmentNotFoundException::new);
-        final var owner = userRepository.findById(updateReq.getId())
+        final var owner = userRepository.findById(updateReq.getOwnerId())
                 .orElseThrow(UserNotFoundException::new);
 
         final var module = assessment.forceAcquireModule(moduleId);
@@ -168,7 +168,7 @@ public class AssessmentController {
     static class ModuleAnswersUpdateReq {
 
         @NotBlank
-        private String id;
+        private String ownerId;
 
         @NotNull
         private List<Assessment.Answer> answers;
