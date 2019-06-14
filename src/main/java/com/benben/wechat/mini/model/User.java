@@ -12,6 +12,7 @@ public class User {
 
     @Id
     private String id;
+    private String xForwardedFor;
     private Long createTime;
     private CustomProfile customProfile;
     private List<Assessment> assessments;

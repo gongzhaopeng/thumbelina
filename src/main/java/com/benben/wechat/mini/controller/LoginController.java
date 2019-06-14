@@ -6,11 +6,9 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -31,13 +29,16 @@ public class LoginController {
 
     @PostMapping("/id")
     public LoginResp loginById(
-            @Valid @RequestBody LoginByIdReq loginByIdReq) {
+            @Valid @RequestBody LoginByIdReq loginByIdReq,
+            @RequestHeader HttpHeaders headers) {
 
         final var id = loginByIdReq.getId();
 
         final var user = userRepository.findById(id).orElseGet(() -> {
             final var u = new User();
             u.setId(id);
+            u.setXForwardedFor(
+                    headers.getFirst("X-Forwarded-For"));
             u.setCreateTime(System.currentTimeMillis());
 
             return userRepository.save(u);
