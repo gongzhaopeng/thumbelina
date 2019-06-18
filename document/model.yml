@@ -25,6 +25,8 @@ assessment:
   owner: '(String)'
   modules:
     - id: '(String)'
+      start-time: '(Long)'
+      end-time: '(Long)'
       answers:
         - question-id: '(String)'
           content: '(Map[String, Object])'

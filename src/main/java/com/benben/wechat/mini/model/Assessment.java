@@ -42,6 +42,8 @@ public class Assessment {
     public static class Module {
 
         private String id;
+        private Long startTime;
+        private Long endTime;
         private List<Answer> answers;
     }
 

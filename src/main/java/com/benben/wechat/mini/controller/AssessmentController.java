@@ -102,6 +102,8 @@ public class AssessmentController {
                 .orElseThrow(UserNotFoundException::new);
 
         final var module = assessment.forceAcquireModule(moduleId);
+        module.setStartTime(updateReq.getStartTime());
+        module.setEndTime(updateReq.getEndTime());
         module.setAnswers(updateReq.getAnswers());
 
         owner.getAssessment(assessmentId)
@@ -169,6 +171,9 @@ public class AssessmentController {
 
         @NotBlank
         private String ownerId;
+
+        private Long startTime;
+        private Long endTime;
 
         @NotNull
         private List<Assessment.Answer> answers;
