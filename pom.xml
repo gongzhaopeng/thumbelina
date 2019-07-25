@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.benben</groupId>
     <artifactId>thumbelina</artifactId>
-    <version>ape.1.0</version>
+    <version>ape.1.1</version>
     <name>thumbelina</name>
     <description>Backend for ape:h5.</description>
 
